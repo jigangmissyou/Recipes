@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@vueuse/core": "^13.3.0",
+    "axios": "^1.9.0",
+    "pinia": "^3.0.2",
+    "sortablejs": "^1.15.6",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vue/tsconfig": "^0.7.0"
+  }
+}

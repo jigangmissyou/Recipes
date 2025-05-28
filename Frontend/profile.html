@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Recipe Sharing App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        .profile-page {
+            padding-top: 56px;
+            padding-bottom: 20px;
+        }
+        .profile-header {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        .profile-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .profile-bio {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .profile-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        .menu-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+            text-decoration: none;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .menu-item i {
+            width: 24px;
+            margin-right: 15px;
+            color: #666;
+        }
+        .menu-item .arrow {
+            margin-left: auto;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar navbar-light top-nav fixed-top">
+        <div class="container-fluid d-flex align-items-center">
+            <button class="btn-nav" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h5 class="mb-0">My Profile</h5>
+            <button class="btn-nav" onclick="location.href='settings.html'">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 个人资料页面 -->
+    <div class="profile-page">
+        <div class="container">
+            <!-- 个人信息头部 -->
+            <div class="profile-header text-center">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde" class="profile-avatar" alt="Profile">
+                <h4 class="profile-name">John Doe</h4>
+                <p class="profile-bio">Food lover and amateur chef</p>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Recipes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">156</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">89</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                </div>
+                <button class="btn btn-outline-primary" onclick="location.href='edit-profile.html'">
+                    Edit Profile
+                </button>
+            </div>
+
+            <!-- 菜单选项 -->
+            <div class="menu-section">
+                <a href="my-recipes.html" class="menu-item">
+                    <i class="fas fa-utensils"></i>
+                    My Recipes
+                    <i class="fas fa-chevron-right arrow"></i>
+                </a>
+                <a href="favorites.html" class="menu-item">
+                    <i class="fas fa-heart"></i>
+                    My Favorites
+                    <i class="fas fa-chevron-right arrow"></i>
+                </a>
+                <a href="notifications.html" class="menu-item">
+                    <i class="fas fa-bell"></i>
+                    Notifications
+                    <i class="fas fa-chevron-right arrow"></i>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <a href="help.html" class="menu-item">
+                    <i class="fas fa-question-circle"></i>
+                    Help & Support
+                    <i class="fas fa-chevron-right arrow"></i>
+                </a>
+                <a href="about.html" class="menu-item">
+                    <i class="fas fa-info-circle"></i>
+                    About
+                    <i class="fas fa-chevron-right arrow"></i>
+                </a>
+                <a href="#" class="menu-item text-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // TODO: 处理登出逻辑
+                location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html> 

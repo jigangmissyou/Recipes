@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe List - Recipe Sharing App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        /* 顶部导航栏样式优化 */
+        .top-nav {
+            height: 56px;
+            padding: 0 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .top-nav .container-fluid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 0;
+            max-width: 100%;
+            padding: 0 10px;
+        }
+
+        /* 新增按钮样式 */
+        .btn-add {
+            width: 32px; /* 减小按钮尺寸 */
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px; /* 减小图标尺寸 */
+        }
+
+        /* 搜索框容器 */
+        .search-box {
+            position: relative;
+            width: 180px; /* 减小宽度 */
+            flex-shrink: 0;
+            margin: 0 8px;
+        }
+
+        /* 搜索框输入框 */
+        .search-box input {
+            height: 36px; /* 调整输入框高度 */
+            border-radius: 18px;
+            padding-left: 36px;
+            padding-right: 15px;
+            border: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+            font-size: 14px;
+        }
+
+        /* 搜索图标 */
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* 右侧按钮组 */
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 4px; /* 减小间距 */
+            flex-shrink: 0;
+        }
+
+        /* 导航按钮样式 */
+        .btn-nav {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            background: transparent;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+        }
+
+        /* 通知徽章 */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 0.25rem 0.5rem;
+            font-size: 10px;
+            line-height: 1;
+            border-radius: 10px;
+        }
+
+        /* 分类下拉菜单样式 */
+        .category-dropdown {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1001;
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .category-dropdown.show {
+            transform: translateX(0);
+        }
+
+        .category-dropdown .dropdown-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .category-dropdown .dropdown-item i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* 底部导航栏样式 */
+        .bottom-nav {
+            height: 70px;
+            background: white;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        }
+        .bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+        }
+        .bottom-nav .nav-item i {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .bottom-nav .nav-item span {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .bottom-nav .nav-item.active {
+            color: var(--primary-color);
+        }
+        .bottom-nav .nav-item.active span {
+            color: var(--primary-color);
+        }
+
+        /* 内容区域调整 */
+        .content-wrapper {
+            padding-top: 76px; /* 增加顶部间距 */
+            padding-bottom: 70px;
+        }
+
+        /* 菜谱卡片样式优化 */
+        .recipe-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .recipe-card .card-body {
+            padding: 15px;
+        }
+
+        .recipe-card .btn-group {
+            gap: 8px;
+        }
+
+        .recipe-card .btn-group .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* 菜谱详情页样式 */
+        .recipe-detail {
+            padding-top: 56px;
+        }
+
+        .ingredients-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ingredients-list li {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ingredients-list .amount {
+            min-width: 80px;
+            color: #666;
+        }
+
+        .steps-list {
+            counter-reset: step-counter;
+            padding: 0;
+        }
+
+        .step-item {
+            position: relative;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .step-number {
+            position: absolute;
+            left: 0;
+            top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .step-content {
+            padding-left: 60px;
+        }
+
+        .step-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        /* 评论区域样式 */
+        .comments-section {
+            margin-top: 20px;
+        }
+
+        .comment-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comment-reply {
+            margin-left: 40px;
+            padding: 8px 0;
+            border-left: 2px solid #eee;
+        }
+
+        .comments-modal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 75vh;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .comments-modal.show {
+            transform: translateY(0);
+        }
+
+        .comment-input-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-input {
+            flex: 1;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            padding: 8px 15px;
+        }
+
+        /* 我的菜谱页面样式 */
+        .my-recipe-card {
+            margin-bottom: 20px;
+        }
+
+        .my-recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .my-recipe-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .my-recipe-actions .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* 添加/编辑菜谱页面样式 */
+        .recipe-form {
+            padding-top: 56px;
+            padding-bottom: 70px;
+        }
+
+        .ingredient-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .ingredient-input-group .form-control {
+            flex: 1;
+        }
+
+        .step-item {
+            position: relative;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: move;
+        }
+
+        .step-item .step-number {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+        }
+
+        .step-item .step-content {
+            padding-left: 40px;
+        }
+
+        .step-item .step-image-upload {
+            margin-top: 10px;
+        }
+
+        .publish-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar navbar-light top-nav fixed-top">
+        <div class="container-fluid d-flex align-items-center">
+            <!-- 新增按钮 -->
+            <button class="btn btn-primary btn-add" title="Add New Recipe">
+                <i class="fas fa-plus"></i>
+            </button>
+
+            <!-- 搜索框 -->
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control" placeholder="Search recipes...">
+            </div>
+
+            <!-- 右侧按钮组 -->
+            <div class="nav-buttons">
+                <!-- 分类下拉菜单 -->
+                <div class="dropdown">
+                    <button class="btn-nav" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <ul class="dropdown-menu category-dropdown" aria-labelledby="categoryDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-utensils"></i> All Recipes</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-drumstick-bite"></i> Meat</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-seedling"></i> Vegetarian</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-fish"></i> Seafood</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-birthday-cake"></i> Desserts</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-glass-martini-alt"></i> Beverages</a></li>
+                    </ul>
+                </div>
+
+                <!-- 通知按钮 -->
+                <div class="position-relative">
+                    <button class="btn-nav" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="badge bg-danger notification-badge">3</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+        <div class="container">
+            <div class="row" id="recipeList">
+                <!-- Recipe Card 1 -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card recipe-card">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" class="card-img-top recipe-image" alt="Healthy Salad">
+                        <div class="card-body">
+                            <h5 class="card-title">Fresh Summer Salad</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-clock"></i> 15 mins
+                                <i class="fas fa-fire ms-3"></i> 320 cal
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-heart"></i> 245
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-comment"></i> 32
+                                    </button>
+                                </div>
+                                <small class="text-muted">By Chef John</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipe Card 2 -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card recipe-card">
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd" class="card-img-top recipe-image" alt="Vegetable Soup">
+                        <div class="card-body">
+                            <h5 class="card-title">Hearty Vegetable Soup</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-clock"></i> 45 mins
+                                <i class="fas fa-fire ms-3"></i> 280 cal
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-heart"></i> 189
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-comment"></i> 24
+                                    </button>
+                                </div>
+                                <small class="text-muted">By Chef Sarah</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipe Card 3 -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card recipe-card">
+                        <img src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3327" class="card-img-top recipe-image" alt="Pasta Dish">
+                        <div class="card-body">
+                            <h5 class="card-title">Creamy Mushroom Pasta</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-clock"></i> 30 mins
+                                <i class="fas fa-fire ms-3"></i> 450 cal
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-heart"></i> 312
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-comment"></i> 45
+                                    </button>
+                                </div>
+                                <small class="text-muted">By Chef Mike</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 加载更多指示器 -->
+                <div class="col-12 text-center" id="loadingIndicator" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <nav class="navbar navbar-light bottom-nav fixed-bottom">
+        <div class="container">
+            <div class="row w-100">
+                <div class="col-4">
+                    <div class="nav-item active">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="nav-item">
+                        <i class="fas fa-heart"></i>
+                        <span>Favorites</span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="nav-item">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 添加无限滚动脚本 -->
+    <script>
+    // 示例数据
+    const recipes = [
+      {
+        img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+        title: 'Fresh Summer Salad',
+        time: '15 mins',
+        cal: '320 cal',
+        heart: 245,
+        comment: 32,
+        chef: 'Chef John'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
+        title: 'Hearty Vegetable Soup',
+        time: '45 mins',
+        cal: '280 cal',
+        heart: 189,
+        comment: 24,
+        chef: 'Chef Sarah'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327',
+        title: 'Creamy Mushroom Pasta',
+        time: '30 mins',
+        cal: '450 cal',
+        heart: 312,
+        comment: 45,
+        chef: 'Chef Mike'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1464306076886-debca5e8a6b0',
+        title: 'Homemade Burger',
+        time: '25 mins',
+        cal: '550 cal',
+        heart: 400,
+        comment: 51,
+        chef: 'Chef Anna'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc',
+        title: 'Avocado Toast',
+        time: '10 mins',
+        cal: '220 cal',
+        heart: 210,
+        comment: 18,
+        chef: 'Chef Tom'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
+        title: 'Classic Italian Pizza',
+        time: '40 mins',
+        cal: '600 cal',
+        heart: 512,
+        comment: 78,
+        chef: 'Chef Mario'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288',
+        title: 'Grilled Salmon',
+        time: '35 mins',
+        cal: '390 cal',
+        heart: 320,
+        comment: 29,
+        chef: 'Chef Lisa'
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1504674900247-ec6b0b1b6b2b',
+        title: 'Chocolate Cake',
+        time: '60 mins',
+        cal: '700 cal',
+        heart: 600,
+        comment: 102,
+        chef: 'Chef Emma'
+      }
+    ];
+
+    let loaded = 3;
+    const perLoad = 3;
+
+    function createRecipeCard(recipe) {
+      return `
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card recipe-card">
+            <img src="${recipe.img}" class="card-img-top recipe-image" alt="${recipe.title}">
+            <div class="card-body">
+              <h5 class="card-title">${recipe.title}</h5>
+              <p class="card-text text-muted">
+                <i class="fas fa-clock"></i> ${recipe.time}
+                <i class="fas fa-fire ms-3"></i> ${recipe.cal}
+              </p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <button class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-heart"></i> ${recipe.heart}
+                  </button>
+                  <button class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-comment"></i> ${recipe.comment}
+                  </button>
+                </div>
+                <small class="text-muted">By ${recipe.chef}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function loadMoreRecipes() {
+      const list = document.getElementById('recipeList');
+      const indicator = document.getElementById('loadingIndicator');
+      indicator.style.display = 'block';
+      setTimeout(() => {
+        let html = '';
+        for (let i = loaded; i < Math.min(loaded + perLoad, recipes.length); i++) {
+          html += createRecipeCard(recipes[i]);
+        }
+        list.insertAdjacentHTML('beforeend', html);
+        loaded += perLoad;
+        if (loaded >= recipes.length) {
+          indicator.style.display = 'none';
+          window.removeEventListener('scroll', handleScroll);
+        } else {
+          indicator.style.display = 'none';
+        }
+      }, 800);
+    }
+
+    function handleScroll() {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.body.offsetHeight;
+      if (scrollTop + windowHeight > docHeight - 100) {
+        loadMoreRecipes();
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll);
+    </script>
+    <!-- END 无限滚动脚本 -->
+</body>
+</html> 

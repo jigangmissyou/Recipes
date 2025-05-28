@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Detail - Recipe Sharing App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        .recipe-header {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+        .recipe-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .recipe-header-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+        }
+        .recipe-stats {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .ingredients-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .ingredient-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .step-item {
+            position: relative;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+        .step-item::before {
+            display: none; /* 移除自动生成的步骤序号 */
+        }
+        .step-number {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            width: 24px;
+            height: 24px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 1;
+        }
+        .step-content {
+            padding-left: 40px; /* 为步骤序号留出空间 */
+        }
+        .step-content p {
+            margin-bottom: 15px;
+        }
+        .step-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .comments-preview {
+            margin-top: 20px;
+        }
+        .comment-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .comment-author {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .comment-time {
+            color: #666;
+            font-size: 12px;
+        }
+        .comment-content {
+            margin-bottom: 10px;
+            padding-left: 50px;
+        }
+        .comment-actions {
+            display: flex;
+            gap: 15px;
+            padding-left: 50px;
+            color: #666;
+            font-size: 14px;
+        }
+        .comment-actions button {
+            background: none;
+            border: none;
+            color: #666;
+            padding: 0;
+        }
+        .comment-actions button:hover {
+            color: var(--primary-color);
+        }
+        .replies {
+            margin-left: 50px;
+            margin-top: 10px;
+            padding-left: 10px;
+            border-left: 2px solid #eee;
+        }
+        .reply-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .reply-item:last-child {
+            border-bottom: none;
+        }
+        .comments-modal .modal-dialog {
+            margin: 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 75vh;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        .comments-modal.show .modal-dialog {
+            transform: translateY(0);
+        }
+        .comments-modal .modal-content {
+            height: 100%;
+            border-radius: 20px 20px 0 0;
+            border: none;
+        }
+        .comments-modal .modal-body {
+            padding: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            height: calc(100% - 120px); /* 减去头部和底部的高度 */
+        }
+        .comments-modal .modal-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+            border-bottom: 1px solid #eee;
+            border-radius: 20px 20px 0 0;
+        }
+        .comments-modal .modal-footer {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            z-index: 1;
+            border-top: 1px solid #eee;
+            padding: 15px;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar navbar-light top-nav fixed-top">
+        <div class="container-fluid d-flex align-items-center">
+            <button class="btn-nav" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="ms-auto d-flex gap-2">
+                <button class="btn-nav">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="btn-nav">
+                    <i class="fas fa-bookmark"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 菜谱详情内容 -->
+    <div class="recipe-detail">
+        <div class="recipe-header">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836" alt="Classic Italian Pizza">
+            <div class="recipe-header-overlay">
+                <h2>Classic Italian Pizza</h2>
+                <div class="recipe-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>40 mins</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-fire"></i>
+                        <span>600 cal</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-user"></i>
+                        <span>By Chef Mario</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- 点赞和评论按钮 -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-heart"></i> 512
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="showComments()">
+                        <i class="fas fa-comment"></i> 78
+                    </button>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fas fa-utensils"></i> Start Cooking
+                </button>
+            </div>
+
+            <!-- 食材清单 -->
+            <div class="ingredients-section">
+                <h4>Ingredients</h4>
+                <div class="ingredient-item">
+                    <span>Pizza dough</span>
+                    <span>300g</span>
+                </div>
+                <div class="ingredient-item">
+                    <span>Tomato sauce</span>
+                    <span>200ml</span>
+                </div>
+                <div class="ingredient-item">
+                    <span>Mozzarella cheese</span>
+                    <span>250g</span>
+                </div>
+                <div class="ingredient-item">
+                    <span>Fresh basil</span>
+                    <span>1 cup</span>
+                </div>
+                <div class="ingredient-item">
+                    <span>Olive oil</span>
+                    <span>2 tbsp</span>
+                </div>
+            </div>
+
+            <!-- 步骤说明 -->
+            <div class="steps-section">
+                <h4>Steps</h4>
+                <div class="step-item">
+                    <div class="step-number">1/5</div>
+                    <div class="step-content">
+                        <p>Preheat oven to 250°C (480°F).</p>
+                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591" class="step-image" alt="Step 1">
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2/5</div>
+                    <div class="step-content">
+                        <p>Roll out the pizza dough on a floured surface.</p>
+                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591" class="step-image" alt="Step 2">
+                    </div>
+                </div>
+                <!-- 更多步骤... -->
+            </div>
+
+            <!-- 评论预览 -->
+            <div class="comments-preview">
+                <h4>Comments</h4>
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <img src="https://randomuser.me/api/portraits/women/32.jpg" class="comment-avatar" alt="User">
+                        <div>
+                            <h6 class="mb-0">Anna Smith</h6>
+                            <small class="text-muted">2 hours ago</small>
+                        </div>
+                    </div>
+                    <p class="mb-1">This recipe is amazing! I made it for my family and they loved it.</p>
+                    <div class="comment-reply">
+                        <div class="comment-header">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" class="comment-avatar" alt="User">
+                            <div>
+                                <h6 class="mb-0">Chef Mario</h6>
+                                <small class="text-muted">1 hour ago</small>
+                            </div>
+                        </div>
+                        <p class="mb-0">Thank you for trying my recipe! I'm glad your family enjoyed it.</p>
+                    </div>
+                </div>
+                <!-- 更多评论... -->
+                <button class="btn btn-link w-100" onclick="showComments()">View all comments</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评论模态框 -->
+    <div class="modal fade comments-modal" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true" data-bs-backdrop="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="commentsModalLabel">Comments</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 评论列表 -->
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde" class="comment-avatar" alt="User">
+                            <span class="comment-author">John Doe</span>
+                            <span class="comment-time">2 hours ago</span>
+                        </div>
+                        <div class="comment-content">
+                            This recipe looks amazing! I can't wait to try it. The step-by-step instructions are very clear.
+                        </div>
+                        <div class="comment-actions">
+                            <button><i class="fas fa-heart"></i> Like</button>
+                            <button><i class="fas fa-reply"></i> Reply</button>
+                        </div>
+                        <div class="replies">
+                            <div class="reply-item">
+                                <div class="comment-header">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330" class="comment-avatar" alt="User">
+                                    <span class="comment-author">Jane Smith</span>
+                                    <span class="comment-time">1 hour ago</span>
+                                </div>
+                                <div class="comment-content">
+                                    I tried it yesterday and it turned out great! The chocolate flavor is perfect.
+                                </div>
+                                <div class="comment-actions">
+                                    <button><i class="fas fa-heart"></i> Like</button>
+                                    <button><i class="fas fa-reply"></i> Reply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330" class="comment-avatar" alt="User">
+                            <span class="comment-author">Jane Smith</span>
+                            <span class="comment-time">3 hours ago</span>
+                        </div>
+                        <div class="comment-content">
+                            I love how detailed the instructions are. The photos really help visualize each step.
+                        </div>
+                        <div class="comment-actions">
+                            <button><i class="fas fa-heart"></i> Like</button>
+                            <button><i class="fas fa-reply"></i> Reply</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Write a comment...">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 初始化评论模态框
+        let commentsModal;
+        document.addEventListener('DOMContentLoaded', function() {
+            commentsModal = new bootstrap.Modal(document.getElementById('commentsModal'), {
+                backdrop: true,
+                keyboard: true
+            });
+        });
+
+        function showComments() {
+            if (commentsModal) {
+                commentsModal.show();
+            }
+        }
+
+        // 防止背景滚动
+        document.getElementById('commentsModal').addEventListener('show.bs.modal', function () {
+            document.body.style.overflow = 'hidden';
+        });
+        
+        document.getElementById('commentsModal').addEventListener('hidden.bs.modal', function () {
+            document.body.style.overflow = '';
+        });
+
+        // 初始化 Bootstrap 组件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化所有工具提示
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html> 
