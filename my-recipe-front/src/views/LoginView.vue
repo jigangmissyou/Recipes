@@ -19,10 +19,10 @@
       <form class="login-form" @submit.prevent="handleLogin">
         <div class="form-group">
           <div class="input-wrapper">
-            <i class="fas fa-envelope"></i>
+            <i class="fas fa-user"></i>
             <input
-              type="email"
-              v-model="email"
+              type="text"
+              v-model="login"
               class="form-control"
               placeholder="Email"
               required
@@ -102,7 +102,7 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const email = ref('')
+const login = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
@@ -111,10 +111,22 @@ const loading = ref(false)
 const handleLogin = async () => {
   try {
     loading.value = true
-    await authStore.login(email.value, password.value)
-    router.push('/')
-  } catch (error) {
-    console.error('Login failed:', error)
+    if (!login.value || !password.value) {
+      alert('Please type in email and password')
+      return
+    }
+    
+    await authStore.login(login.value, password.value)
+    router.push('/recipes')
+  } catch (error: any) {
+    console.error('Login error details:', error.response?.data)
+    if (error.response?.data?.message) {
+      alert(error.response.data.message)
+    } else if (error.response?.status === 401) {
+      alert('Your credentials are wrong')
+    } else {
+      alert('Ops, something is wrtong!! Please try again later')
+    }
   } finally {
     loading.value = false
   }

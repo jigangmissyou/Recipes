@@ -154,10 +154,21 @@ const handleRegister = async () => {
 
   try {
     loading.value = true
-    await authStore.register(username.value, email.value, password.value)
-    router.push('/')
-  } catch (error) {
-    console.error('Registration failed:', error)
+    await authStore.register({
+      nickname: username.value,
+      email: email.value,
+      password: password.value,
+      password_confirmation: confirmPassword.value
+    })
+    router.push('/recipes')
+  } catch (error: any) {
+    if (error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      const errorMessage = Object.values(errors).flat().join('\n')
+      alert(errorMessage)
+    } else {
+      alert('Registration failed')
+    }
   } finally {
     loading.value = false
   }
