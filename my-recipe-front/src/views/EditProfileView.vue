@@ -53,7 +53,7 @@
                 placeholder="Enter your nickname"
               >
             </div>
-            <span class="char-count">{{ user.nickname.length }}/20</span>
+            <span class="char-count">{{ user.nickname?.length || 0 }}/20</span>
           </div>
   
           <div class="form-group">
@@ -68,7 +68,7 @@
                 placeholder="Say something about yourself"
               ></textarea>
             </div>
-            <span class="char-count">{{ user.bio.length }}/60</span>
+            <span class="char-count">{{ user.bio?.length || 0 }}/60</span>
           </div>
         </div>
   
@@ -81,9 +81,11 @@
     </div>
   </template>
   
-  <script setup>
+  <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
+  import { profileService } from '@/services/profile'
+  import type { Profile, UpdateProfileData } from '@/services/profile'
   
   const router = useRouter()
   const route = useRoute()
@@ -91,13 +93,17 @@
   const avatarPreview = ref('')
   const loading = ref(true)
   const error = ref(null)
+  const saving = ref(false)
   
   // 用户数据
-  const user = ref({
-    id: '',
+  const user = ref<Profile>({
+    id: 0,
     nickname: '',
     avatar: '',
-    bio: ''
+    bio: '',
+    recipes: 0,
+    likes: 0,
+    comments: 0
   })
   
   // 获取用户数据
@@ -105,15 +111,8 @@
     loading.value = true
     error.value = null
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // 这里应该调用实际的API
-      user.value = {
-        id: route.params.id,
-        nickname: 'Foodie',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        bio: 'Love cooking and sharing recipes!'
-      }
+      const profile = await profileService.getProfile()
+      user.value = profile
     } catch (err) {
       error.value = 'Failed to load profile'
       console.error('Error fetching profile:', err)
@@ -130,29 +129,42 @@
     avatarInput.value && avatarInput.value.click()
   }
   
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        avatarPreview.value = event.target.result
+      try {
+        loading.value = true
+        const result = await profileService.uploadAvatar(file)
+        avatarPreview.value = result.avatar
+        user.value.avatar = result.avatar
+      } catch (err) {
+        error.value = 'Failed to upload avatar'
+        console.error('Error uploading avatar:', err)
+      } finally {
+        loading.value = false
       }
-      reader.readAsDataURL(file)
     }
   }
   
   const saveProfile = async () => {
     try {
-      // 这里应该调用实际的API
-      await new Promise(resolve => setTimeout(resolve, 500))
-      // 如果有avatarPreview，说明用户更换了头像
-      if (avatarPreview.value) {
-        user.value.avatar = avatarPreview.value
+      saving.value = true
+      const updateData: UpdateProfileData = {
+        nickname: user.value.nickname,
+        bio: user.value.bio
       }
+      
+      if (avatarPreview.value) {
+        updateData.avatar = avatarPreview.value
+      }
+      
+      await profileService.updateProfile(updateData)
       router.push('/profile')
     } catch (err) {
       error.value = 'Failed to save profile'
       console.error('Error saving profile:', err)
+    } finally {
+      saving.value = false
     }
   }
   

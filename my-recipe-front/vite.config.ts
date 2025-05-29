@@ -9,4 +9,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'), // ✅ 添加这一行
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  }
 })

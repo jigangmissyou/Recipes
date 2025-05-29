@@ -7,7 +7,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  }
+  },
+  withCredentials: true
 })
 
 // 请求拦截器：添加 token
@@ -27,6 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
     phone?: string
   } | null>(null)
   const token = ref<string | null>(null)
+  const lastVisitedPath = ref<string>('/recipes')
 
   const setAuth = (authData: { user: any; access_token: string }) => {
     user.value = authData.user
@@ -65,16 +67,28 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await api.post('/register', data)
       setAuth(response.data)
       return true
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration failed:', error)
       throw error
     }
   }
 
-  const logout = () => {
-    user.value = null
-    token.value = null
-    localStorage.removeItem('token')
+  const logout = async () => {
+    try {
+      // 调用后端的登出接口
+      await api.post('/logout')
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      // 无论后端是否成功，都清除本地状态
+      user.value = null
+      token.value = null
+      localStorage.removeItem('token')
+    }
+  }
+
+  const setLastVisitedPath = (path: string) => {
+    lastVisitedPath.value = path
   }
 
   // 初始化时从 localStorage 恢复 token
@@ -85,12 +99,28 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const googleLogin = async (credential: string) => {
+    try {
+      console.log('Sending Google credential to backend')
+      const response = await api.post('/auth/google', { credential })
+      console.log('Google login response:', response.data)
+      setAuth(response.data)
+      return true
+    } catch (error: any) {
+      console.error('Google login failed:', error)
+      throw error
+    }
+  }
+
   return {
     user,
     token,
+    lastVisitedPath,
     login,
     register,
     logout,
-    initAuth
+    setLastVisitedPath,
+    initAuth,
+    googleLogin
   }
 })

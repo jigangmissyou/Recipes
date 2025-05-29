@@ -59,39 +59,71 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { profileService } from '@/services/profile'
+import type { Profile } from '@/services/profile'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-// 假数据，实际开发请用API获取
-const user = ref({
-  id: '10001',
-  nickname: 'Foodie',
-  avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  bio: 'Love cooking and sharing recipes!',
-  recipes: 12,
-  likes: 234,
-  comments: 56
+const user = ref<Profile>({
+  id: 0,
+  nickname: '',
+  avatar: '',
+  bio: '',
+  recipes: 0,
+  likes: 0,
+  comments: 0
 })
 
-const editProfile = () => {
-  router.push('/edit-profile')
+const loading = ref(true)
+const error = ref(null)
+
+const fetchProfile = async () => {
+  try {
+    loading.value = true
+    const profile = await profileService.getProfile()
+    user.value = profile
+  } catch (err) {
+    console.error('Failed to fetch profile:', err)
+    error.value = 'Failed to load profile'
+  } finally {
+    loading.value = false
+  }
 }
+
+const editProfile = () => {
+  router.push(`/edit-profile/${user.value.id}`)
+}
+
 const goToMyRecipes = () => {
   router.push('/my-recipes')
 }
+
 const goToLiked = () => {
   router.push('/liked-recipes')
 }
+
 const goToComments = () => {
   router.push('/my-comments')
 }
-const logout = () => {
-  // 清理token等
-  router.push('/login')
+
+const logout = async () => {
+  try {
+    await authStore.logout()
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
+    alert('退出登录失败，请重试')
+  }
 }
+
+onMounted(() => {
+  fetchProfile()
+})
 </script>
 
 <style scoped>
