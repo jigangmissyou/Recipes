@@ -19,37 +19,47 @@
           <div class="form-section">
             <h5>Basic Information</h5>
             <div class="mb-3">
-              <label class="form-label">Recipe Title</label>
-              <input v-model="form.title" type="text" class="form-control" placeholder="Enter a descriptive title" required>
-              <div class="form-tip">Make it clear and appetizing!</div>
+              <label class="form-label">Recipe Name</label>
+              <input v-model="form.name" type="text" class="form-control" placeholder="Enter recipe name" required>
             </div>
             <div class="mb-3">
-              <label class="form-label">Cover Image</label>
-              <div class="image-upload" @click="triggerCoverUpload">
-                <div class="image-upload-placeholder" v-if="!form.coverImageUrl">
-                  <i class="fas fa-camera"></i>
-                  <p>Click to upload cover image</p>
-                </div>
-                <img v-if="form.coverImageUrl" :src="form.coverImageUrl" alt="" />
-                <div class="image-upload-overlay">
-                  <i class="fas fa-camera"></i> Change Image
-                </div>
-                <input ref="coverInput" type="file" accept="image/*" style="display: none" @change="handleCoverChange">
-              </div>
-              <div class="form-tip">Recommended size: 1200x800 pixels</div>
+              <label class="form-label">Description</label>
+              <textarea v-model="form.description" class="form-control" rows="3" placeholder="Describe your recipe..." required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Difficulty</label>
+              <select v-model="form.difficulty" class="form-select">
+                <option v-for="option in difficultyOptions" :key="option" :value="option">
+                  {{ option }}
+                </option>
+              </select>
             </div>
             <div class="row">
               <div class="col-6">
                 <div class="mb-3">
-                  <label class="form-label">Cooking Time (mins)</label>
-                  <input v-model.number="form.cookingTime" type="number" class="form-control" placeholder="e.g. 30" required>
+                  <label class="form-label">Prep Time</label>
+                  <input v-model="form.prep_time" type="text" class="form-control" placeholder="e.g. 5 minutes" required>
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label class="form-label">Calories</label>
-                  <input v-model.number="form.calories" type="number" class="form-control" placeholder="e.g. 400" required>
+                  <label class="form-label">Cook Time</label>
+                  <input v-model="form.cook_time" type="text" class="form-control" placeholder="e.g. 15 minutes" required>
                 </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Cover Image</label>
+              <div class="image-upload" @click="triggerCoverUpload">
+                <div class="image-upload-placeholder" v-if="!form.cover_image">
+                  <i class="fas fa-camera"></i>
+                  <p>Click to upload cover image</p>
+                </div>
+                <img v-if="form.cover_image" :src="form.cover_image" alt="" />
+                <div class="image-upload-overlay">
+                  <i class="fas fa-camera"></i> Change Image
+                </div>
+                <input ref="coverInput" type="file" accept="image/*" style="display: none" @change="handleCoverChange">
               </div>
             </div>
           </div>
@@ -60,17 +70,9 @@
             <div id="ingredientsList">
               <div class="ingredient-item" v-for="(ingredient, idx) in form.ingredients" :key="idx">
                 <input v-model="ingredient.name" type="text" class="form-control" placeholder="Ingredient name" required>
-                <input v-model.number="ingredient.amount" type="number" class="form-control" placeholder="Amount" required>
-                <select v-model="ingredient.unit" class="form-select">
-                  <option value="g">g</option>
-                  <option value="kg">kg</option>
-                  <option value="ml">ml</option>
-                  <option value="l">l</option>
-                  <option value="tbsp">tbsp</option>
-                  <option value="tsp">tsp</option>
-                  <option value="cup">cup</option>
-                  <option value="piece">piece</option>
-                </select>
+                <input v-model="ingredient.quantity" type="text" class="form-control" placeholder="Quantity" required>
+                <input v-model="ingredient.unit" type="text" class="form-control" placeholder="Unit">
+                <input v-model="ingredient.notes" type="text" class="form-control" placeholder="Notes (optional)">
                 <button type="button" class="btn btn-outline-danger" @click="removeIngredient(idx)" :disabled="form.ingredients.length === 1">
                   <i class="fas fa-times"></i>
                 </button>
@@ -85,26 +87,39 @@
           <div class="form-section">
             <h5>Cooking Steps</h5>
             <div id="stepsList">
-              <div class="step-item" v-for="(step, idx) in form.steps" :key="step.id" :data-id="step.id">
-                <div class="step-number">{{ idx + 1 }}</div>
+              <div class="step-item" v-for="(step, idx) in form.steps" :key="step.step_order">
+                <div class="step-number">
+                  <div class="drag-handle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  {{ idx + 1 }}
+                </div>
+                <div class="step-content">
+                  <textarea v-model="step.description" class="form-control" rows="3" placeholder="Describe this step in detail..." required></textarea>
+                  <div class="step-image-upload" @click="triggerStepImageUpload(idx)">
+                    <div class="step-image-placeholder" v-if="!step.image_url">
+                      <i class="fas fa-camera"></i>
+                      <p>Add step image (optional)</p>
+                    </div>
+                    <img v-if="step.image_url" :src="step.image_url" alt="">
+                    <div class="image-upload-overlay">
+                      <i class="fas fa-camera"></i> Change Image
+                    </div>
+                    <input 
+                      :ref="el => { if (el) stepInputs[idx] = el }" 
+                      type="file" 
+                      accept="image/*" 
+                      style="display: none" 
+                      @change="e => handleStepImageChange(e, idx)"
+                    >
+                  </div>
+                </div>
                 <div class="step-actions">
                   <button type="button" class="btn btn-outline-danger btn-step-action" @click="removeStep(idx)" :disabled="form.steps.length === 1">
                     <i class="fas fa-trash"></i>
                   </button>
-                </div>
-                <div class="step-content">
-                  <textarea v-model="step.text" class="form-control" rows="3" placeholder="Describe this step in detail..." required></textarea>
-                  <div class="step-image-upload" @click="triggerStepImageUpload(idx)">
-                    <div class="step-image-placeholder" v-if="!step.imageUrl">
-                      <i class="fas fa-camera"></i>
-                      <p>Add step image</p>
-                    </div>
-                    <img v-if="step.imageUrl" :src="step.imageUrl" alt="">
-                    <div class="image-upload-overlay">
-                      <i class="fas fa-camera"></i> Change Image
-                    </div>
-                    <input ref="stepInputs" type="file" accept="image/*" style="display: none" @change="e => handleStepImageChange(e, idx)">
-                  </div>
                 </div>
                 <div class="step-drag-handle">
                   <i class="fas fa-grip-vertical"></i>
@@ -115,10 +130,44 @@
               <i class="fas fa-plus"></i> Add Step
             </button>
           </div>
+
+          <!-- 添加标签部分 -->
+          <div class="form-section">
+            <h5>Tags</h5>
+            <div class="mb-3">
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Add tags (press Enter to add)"
+                @keydown.enter.prevent="addTag"
+              >
+              <div class="tags-container mt-2">
+                <span 
+                  v-for="(tag, index) in form.tags" 
+                  :key="index" 
+                  class="badge bg-primary me-2 mb-2"
+                >
+                  {{ tag }}
+                  <button 
+                    type="button" 
+                    class="btn-close btn-close-white ms-2" 
+                    @click="removeTag(index)"
+                  ></button>
+                </span>
+              </div>
+            </div>
+          </div>
         </form>
+
         <!-- 发布按钮 -->
-        <button type="button" class="btn btn-primary publish-button" @click="handleSubmit">
-          <i class="fas fa-paper-plane"></i> Publish Recipe
+        <button 
+          type="button" 
+          class="btn btn-primary publish-button" 
+          @click="handleSubmit"
+          :disabled="loading"
+        >
+          <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+          {{ loading ? 'Publishing...' : 'Publish Recipe' }}
         </button>
       </div>
     </div>
@@ -127,76 +176,145 @@
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import Sortable from 'sortablejs'
+import { recipeService } from '@/services/recipe'
+import type { Recipe } from '@/services/recipe'
 
+const router = useRouter()
 const goBack = () => window.history.back()
 
 const coverInput = ref<HTMLInputElement | null>(null)
 const stepInputs = ref<HTMLInputElement[]>([])
+const loading = ref(false)
 
 const form = ref({
-  title: '',
-  coverImageUrl: '',
-  cookingTime: null as number | null,
-  calories: null as number | null,
+  category_id: 1,
+  name: '',
+  description: '',
+  difficulty: 'Easy',
+  prep_time: '',
+  cook_time: '',
+  cover_image: '',
   ingredients: [
-    { name: '', amount: null as number | null, unit: 'g' }
+    { name: '', quantity: '', unit: '', notes: '' }
   ],
   steps: [
-    { id: Date.now(), text: '', imageUrl: '' }
-  ]
+    { 
+      step_order: 1, 
+      description: '',
+      image_url: ''
+    }
+  ],
+  tags: []
 })
 
+const difficultyOptions = ['Easy', 'Medium', 'Hard']
+
 const addIngredient = () => {
-  form.value.ingredients.push({ name: '', amount: null, unit: 'g' })
+  form.value.ingredients.push({ name: '', quantity: '', unit: '', notes: '' })
 }
 const removeIngredient = (idx: number) => {
   if (form.value.ingredients.length > 1) form.value.ingredients.splice(idx, 1)
 }
 
 const addStep = () => {
-  form.value.steps.push({ id: Date.now() + Math.random(), text: '', imageUrl: '' })
+  const newOrder = form.value.steps.length + 1
+  form.value.steps.push({ 
+    step_order: newOrder, 
+    description: '',
+    image_url: ''
+  })
   nextTick(() => initSortable())
 }
 const removeStep = (idx: number) => {
-  if (form.value.steps.length > 1) form.value.steps.splice(idx, 1)
+  if (form.value.steps.length > 1) {
+    form.value.steps.splice(idx, 1)
+    form.value.steps.forEach((step, index) => {
+      step.step_order = index + 1
+    })
+  }
 }
 
 const triggerCoverUpload = () => {
   coverInput.value?.click()
 }
-const handleCoverChange = (e: Event) => {
+const handleCoverChange = async (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (file) {
-    const reader = new FileReader()
-    reader.onload = ev => {
-      form.value.coverImageUrl = ev.target?.result as string
+    try {
+      loading.value = true
+      const response = await recipeService.uploadImage(file)
+      console.log('Upload response:', response)
+      if (response.url) {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost'
+        const imageUrl = response.url.startsWith('http') ? response.url : `${baseUrl}${response.url}`
+        form.value.cover_image = imageUrl
+        console.log('Updated cover image URL:', form.value.cover_image)
+      } else {
+        throw new Error('No image URL in response')
+      }
+    } catch (error) {
+      console.error('Failed to upload image:', error)
+      alert('图片上传失败，请重试')
+    } finally {
+      loading.value = false
     }
-    reader.readAsDataURL(file)
   }
 }
 
-const triggerStepImageUpload = (idx: number) => {
-  // 由于每个input都渲染，直接用ref数组
-  stepInputs.value[idx]?.click()
-}
-const handleStepImageChange = (e: Event, idx: number) => {
+const handleStepImageChange = async (e: Event, idx: number) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (file) {
-    const reader = new FileReader()
-    reader.onload = ev => {
-      form.value.steps[idx].imageUrl = ev.target?.result as string
+    try {
+      loading.value = true
+      const response = await recipeService.uploadImage(file)
+      console.log('Upload response for step image:', response)
+      if (response.url) {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost'
+        const imageUrl = response.url.startsWith('http') ? response.url : `${baseUrl}${response.url}`
+        form.value.steps[idx].image_url = imageUrl
+        console.log('Updated step image URL:', form.value.steps[idx].image_url)
+      } else {
+        throw new Error('No image URL in response')
+      }
+    } catch (error) {
+      console.error('Failed to upload step image:', error)
+      alert('图片上传失败，请重试')
+    } finally {
+      loading.value = false
     }
-    reader.readAsDataURL(file)
   }
 }
 
-const handleSubmit = () => {
-  // 这里可以做表单校验和提交
-  alert('模拟发布成功！')
+const handleSubmit = async () => {
+  try {
+    if (!form.value.name || !form.value.description || !form.value.cover_image) {
+      alert('请填写所有必填字段')
+      return
+    }
+
+    if (form.value.ingredients.some(ing => !ing.name || !ing.quantity)) {
+      alert('请填写完整的食材信息')
+      return
+    }
+
+    if (form.value.steps.some(step => !step.description)) {
+      alert('请填写所有步骤的描述')
+      return
+    }
+
+    loading.value = true
+    const response = await recipeService.createRecipe(form.value)
+    router.push(`/recipe/${response.id}`)
+  } catch (error) {
+    console.error('Failed to create recipe:', error)
+    alert('创建菜谱失败，请重试')
+  } finally {
+    loading.value = false
+  }
 }
 
-// 拖拽排序
 let sortable: Sortable | null = null
 const initSortable = () => {
   nextTick(() => {
@@ -209,7 +327,6 @@ const initSortable = () => {
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         onEnd: evt => {
-          // 重新排序steps
           const oldIndex = evt.oldIndex!
           const newIndex = evt.newIndex!
           const moved = form.value.steps.splice(oldIndex, 1)[0]
@@ -223,6 +340,23 @@ const initSortable = () => {
 onMounted(() => {
   initSortable()
 })
+
+const addTag = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const tag = input.value.trim()
+  if (tag && !form.value.tags.includes(tag)) {
+    form.value.tags.push(tag)
+    input.value = ''
+  }
+}
+
+const removeTag = (index: number) => {
+  form.value.tags.splice(index, 1)
+}
+
+const triggerStepImageUpload = (idx: number) => {
+  stepInputs.value[idx]?.click()
+}
 </script>
 
 <style scoped>
@@ -375,13 +509,11 @@ onMounted(() => {
   cursor: pointer;
   overflow: hidden;
   position: relative;
-  z-index: 2;
 }
 .step-image-upload img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 .step-image-placeholder {
   text-align: center;
@@ -391,6 +523,23 @@ onMounted(() => {
   font-size: 32px;
   margin-bottom: 5px;
   color: #ddd;
+}
+.image-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.step-image-upload:hover .image-upload-overlay {
+  opacity: 1;
 }
 .btn-add-step {
   width: 100%;
@@ -444,5 +593,28 @@ onMounted(() => {
   background-color: #ff5252;
   border-color: #ff5252;
   color: white;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-close {
+  padding: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 </style>
