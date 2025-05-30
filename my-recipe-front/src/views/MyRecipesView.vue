@@ -1,65 +1,78 @@
 <template>
-  <div class="my-recipes">
-    <!-- 导航栏 -->
-    <nav class="navbar">
-      <button class="btn-back" @click="goBack">
-        <i class="fas fa-arrow-left"></i>
-      </button>
-      <h1>My Recipes</h1>
-    </nav>
-
-    <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Loading recipes...</p>
-    </div>
-
-    <!-- 错误状态 -->
-    <div v-else-if="error" class="error-container">
-      <p class="error-text">An error occurred while loading recipes.</p>
-      <button class="btn btn-primary" @click="goBack">Go Back</button>
-    </div>
-
-    <!-- 内容区域 -->
-    <div v-else class="recipes-content">
-      <!-- 空状态 -->
-      <div v-if="!recipes.length" class="empty-state">
-        <img src="https://picsum.photos/200/200" alt="No recipes" class="empty-image">
-        <h3>No Recipes Yet</h3>
-        <p>Start sharing your favorite recipes with the community!</p>
-        <button class="btn btn-primary" @click="goToAddRecipe">
-          <i class="fas fa-plus"></i> Add Recipe
+  <div class="recipes-page">
+    <!-- 顶部导航栏 -->
+    <nav class="navbar navbar-light top-nav fixed-top">
+      <div class="container-fluid d-flex align-items-center">
+        <button class="btn-nav" @click="goBack">
+          <i class="fas fa-arrow-left"></i>
         </button>
-      </div>
-
-      <!-- 食谱列表 -->
-      <div v-else class="recipes-grid">
-        <div v-for="recipe in recipes" :key="recipe.id" class="recipe-card">
-          <div class="recipe-image">
-            <img :src="recipe.image" :alt="recipe.title">
-            <div class="recipe-actions">
-              <button class="btn-edit" @click="editRecipe(recipe)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn-delete" @click="deleteRecipe(recipe)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="recipe-info">
-            <h3>{{ recipe.title }}</h3>
-            <div class="recipe-meta">
-              <span><i class="fas fa-heart"></i> {{ recipe.likes }}</span>
-              <span><i class="fas fa-comment"></i> {{ recipe.comments }}</span>
-            </div>
-          </div>
+        <h5 class="mb-0">My Recipes</h5>
+        <div class="nav-actions">
+          <button class="btn-icon" @click="goToAddRecipe">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
       </div>
+    </nav>
 
-      <!-- 添加新食谱按钮 -->
-      <button class="btn-add-recipe" @click="goToAddRecipe">
-        <i class="fas fa-plus"></i>
-      </button>
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+      <div class="container">
+        <div class="row" id="recipeList">
+          <div
+            class="col-md-6 col-lg-4 mb-4"
+            v-for="recipe in recipes"
+            :key="recipe.id"
+          >
+            <div class="card recipe-card" @click="goToDetail(recipe.id)">
+              <img
+                :src="recipe.cover_image"
+                class="card-img-top recipe-image"
+                :alt="recipe.name"
+              />
+              <div class="card-body">
+                <h5 class="card-title">{{ recipe.name }}</h5>
+                <p class="card-text text-muted">
+                  <i class="fas fa-clock"></i> {{ recipe.prep_time }} + {{ recipe.cook_time }}
+                </p>
+                <div class="recipe-tags mb-2">
+                  <span v-for="tag in recipe.tags" :key="tag.id" class="badge bg-secondary me-1">
+                    {{ tag.name }}
+                  </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="btn-group">
+                    <button class="btn btn-sm btn-like">
+                      <i class="fas fa-heart"></i> {{ recipe.likes_count || 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-like">
+                      <i class="fas fa-comment"></i> {{ recipe.comments_count || 0 }}
+                    </button>
+                  </div>
+                  <small class="text-muted">By {{ recipe.user.nickname }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="recipes.length === 0" class="text-center text-muted py-5">
+            暂无菜谱
+          </div>
+        </div>
+        
+        <!-- 加载动画 -->
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+        <!-- 加载更多按钮 -->
+        <div v-if="hasMore && !loading" class="text-center py-4">
+          <button class="btn btn-outline-primary" @click="loadMore">
+            Load More
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -67,48 +80,44 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { recipeService } from '@/services/recipe'
 
 const router = useRouter()
 const recipes = ref([])
-const loading = ref(true)
-const error = ref(false)
+const loading = ref(false)
+const currentPage = ref(1)
+const hasMore = ref(true)
 
-// 获取我的食谱列表
-const fetchMyRecipes = async () => {
-  loading.value = true
-  error.value = false
+// 获取我的菜谱列表
+const fetchMyRecipes = async (page = 1) => {
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    recipes.value = [
-      {
-        id: 1,
-        title: "Classic Chocolate Cake",
-        image: "https://picsum.photos/400/300?random=1",
-        likes: 128,
-        comments: 24
-      },
-      {
-        id: 2,
-        title: "Homemade Pizza",
-        image: "https://picsum.photos/400/300?random=2",
-        likes: 89,
-        comments: 15
-      },
-      {
-        id: 3,
-        title: "Fresh Pasta",
-        image: "https://picsum.photos/400/300?random=3",
-        likes: 156,
-        comments: 32
-      }
-    ]
-  } catch (err) {
-    error.value = true
-    console.error('Error fetching recipes:', err)
+    loading.value = true
+    const response = await recipeService.getMyRecipes(page)
+    if (page === 1) {
+      recipes.value = response.data
+    } else {
+      recipes.value = [...recipes.value, ...response.data]
+    }
+    hasMore.value = response.current_page < response.last_page
+    currentPage.value = response.current_page
+  } catch (error) {
+    console.error('Failed to fetch recipes:', error)
+    alert('获取菜谱列表失败，请重试')
   } finally {
     loading.value = false
   }
+}
+
+// 加载更多
+const loadMore = () => {
+  if (!loading.value && hasMore.value) {
+    fetchMyRecipes(currentPage.value + 1)
+  }
+}
+
+// 跳转到菜谱详情
+const goToDetail = (id) => {
+  router.push(`/recipe/${id}`)
 }
 
 // 返回上一页
@@ -116,27 +125,9 @@ const goBack = () => {
   router.back()
 }
 
-// 跳转到添加食谱页面
+// 跳转到添加菜谱页面
 const goToAddRecipe = () => {
   router.push('/add-recipe')
-}
-
-// 编辑食谱
-const editRecipe = (recipe) => {
-  router.push(`/edit-recipe/${recipe.id}`)
-}
-
-// 删除食谱
-const deleteRecipe = async (recipe) => {
-  if (confirm('Are you sure you want to delete this recipe?')) {
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500))
-      recipes.value = recipes.value.filter(r => r.id !== recipe.id)
-    } catch (err) {
-      console.error('Error deleting recipe:', err)
-    }
-  }
 }
 
 onMounted(() => {
@@ -145,22 +136,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.my-recipes {
-  min-height: 100vh;
-  background: #f8f9fa;
-  padding-bottom: 80px;
+.recipes-page {
+  padding-top: 56px;
 }
 
-.navbar {
+.top-nav {
   background: white;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.btn-back {
+.btn-nav {
   background: none;
   border: none;
   color: #333;
@@ -169,51 +154,24 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.navbar h1 {
-  margin: 0;
-  font-size: 20px;
+.nav-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
   color: #333;
-}
-
-.recipes-content {
-  padding: 20px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.empty-image {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  margin-bottom: 20px;
-}
-
-.empty-state h3 {
-  margin: 0 0 10px;
-  color: #333;
-}
-
-.empty-state p {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.recipes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
+  font-size: 18px;
+  padding: 5px;
+  cursor: pointer;
 }
 
 .recipe-card {
-  background: white;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  cursor: pointer;
+  transition: transform 0.2s;
+  height: 100%;
 }
 
 .recipe-card:hover {
@@ -221,152 +179,29 @@ onMounted(() => {
 }
 
 .recipe-image {
-  position: relative;
   height: 200px;
-}
-
-.recipe-image img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
 
-.recipe-actions {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-.btn-edit, .btn-delete {
-  background: rgba(255, 255, 255, 0.9);
+.btn-like {
+  color: #666;
+  background: none;
   border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  padding: 5px 10px;
 }
 
-.btn-edit {
+.btn-like:hover {
   color: #ff5252;
 }
 
-.btn-delete {
-  color: #666;
-}
-
-.btn-edit:hover {
-  background: #ff5252;
-  color: white;
-}
-
-.btn-delete:hover {
-  background: #dc3545;
-  color: white;
-}
-
-.recipe-info {
-  padding: 15px;
-}
-
-.recipe-info h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-  color: #333;
-}
-
-.recipe-meta {
+.recipe-tags {
   display: flex;
-  gap: 15px;
-  color: #666;
-  font-size: 14px;
-}
-
-.recipe-meta span {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 5px;
 }
 
-.btn-add-recipe {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #ff5252;
-  color: white;
-  border: none;
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(255, 82, 82, 0.3);
-  transition: all 0.3s ease;
-}
-
-.btn-add-recipe:hover {
-  transform: scale(1.1);
-  background: #ff3333;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: 20px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ff5252;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: 20px;
-  text-align: center;
-}
-
-.error-text {
-  color: #ff5252;
-  margin-bottom: 15px;
-}
-
-.btn-primary {
-  background: #ff5252;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: #ff3333;
+.badge {
+  font-size: 12px;
+  padding: 5px 10px;
 }
 </style>

@@ -127,6 +127,12 @@ export const recipeService = {
     const response = await api.get(`/recipes?page=${page}`)
     return response.data
   },
+  // 获取我的菜谱
+  async getMyRecipes(page: number = 1): Promise<PaginatedResponse<Recipe>> {
+    const response = await api.get(`/recipes/my?page=${page}`)
+    return response.data
+  },
+
 
   // 创建菜谱
   async createRecipe(recipe: CreateRecipeData) {
