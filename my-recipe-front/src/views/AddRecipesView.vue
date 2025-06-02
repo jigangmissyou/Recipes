@@ -188,6 +188,8 @@ const coverInput = ref<HTMLInputElement | null>(null)
 const stepInputs = ref<HTMLInputElement[]>([])
 const loading = ref(false)
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
 const form = ref({
   category_id: 1,
   name: '',
@@ -247,7 +249,6 @@ const handleCoverChange = async (e: Event) => {
       const response = await recipeService.uploadImage(file)
       console.log('Upload response:', response)
       if (response.url) {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost'
         const imageUrl = response.url.startsWith('http') ? response.url : `${baseUrl}${response.url}`
         form.value.cover_image = imageUrl
         console.log('Updated cover image URL:', form.value.cover_image)
@@ -271,7 +272,6 @@ const handleStepImageChange = async (e: Event, idx: number) => {
       const response = await recipeService.uploadImage(file)
       console.log('Upload response for step image:', response)
       if (response.url) {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost'
         const imageUrl = response.url.startsWith('http') ? response.url : `${baseUrl}${response.url}`
         form.value.steps[idx].image_url = imageUrl
         console.log('Updated step image URL:', form.value.steps[idx].image_url)

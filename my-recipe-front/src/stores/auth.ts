@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: 'http://localhost/api/v1',
+const authApi = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -12,7 +12,7 @@ const api = axios.create({
 })
 
 // 请求拦截器：添加 token
-api.interceptors.request.use((config) => {
+authApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (login: string, password: string) => {
     try {
       console.log('Sending login request with:', { login }) // 不要打印密码
-      const response = await api.post('/login', { 
+      const response = await authApi.post('/login', { 
         login,  // 确保使用 login 作为字段名
         password 
       })
@@ -64,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
     password_confirmation: string
   }) => {
     try {
-      const response = await api.post('/register', data)
+      const response = await authApi.post('/register', data)
       setAuth(response.data)
       return true
     } catch (error: any) {
@@ -76,7 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
       // 调用后端的登出接口
-      await api.post('/logout')
+      await authApi.post('/logout')
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
@@ -102,7 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
   const googleLogin = async (credential: string) => {
     try {
       console.log('Sending Google credential to backend')
-      const response = await api.post('/auth/google', { credential })
+      const response = await authApi.post('/auth/google', { credential })
       console.log('Google login response:', response.data)
       setAuth(response.data)
       return true

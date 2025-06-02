@@ -49,7 +49,7 @@
                       <i class="fas fa-comment"></i> {{ recipe.comments_count || 0 }}
                     </button>
                   </div>
-                  <small class="text-muted">By {{ recipe.user.nickname }}</small>
+                  <small class="text-muted">By {{ recipe.user?.nickname || 'Unknown' }}</small>
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost/api/v1',
+  baseURL: 'https://wohoxpybukjb.us-west-1.clawcloudrun.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'

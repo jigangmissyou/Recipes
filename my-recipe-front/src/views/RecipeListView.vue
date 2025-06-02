@@ -70,7 +70,7 @@
                 </div>
               </div>
             </div>
-            <div v-if="recipes.length === 0" class="text-center text-muted py-5">
+            <div v-if="!loading && recipes.length === 0" class="text-center text-muted py-5">
               暂无菜谱
             </div>
           </div>
