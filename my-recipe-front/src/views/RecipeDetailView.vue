@@ -245,6 +245,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { recipeService } from '../services/recipe'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -311,21 +312,25 @@ const addEmoji = (emoji) => {
   newComment.value += emoji
 }
 
-const submitComment = () => {
+const submitComment = async () => {
   if (!newComment.value.trim()) return
 
-  const comment = {
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-    author: 'Current User',
-    time: 'Just now',
-    content: newComment.value,
-    likes: 0
+  try {
+    const comment = await recipeService.createComment(Number(route.params.id), newComment.value)
+    // 重新获取评论列表，确保显示最新数据
+    await fetchComments()
+    // 清空评论输入框
+    newComment.value = ''
+    // 关闭表情选择器
+    showEmojiPicker.value = false
+    // 清除回复状态
+    replyTo.value = null
+    // 显示成功提示
+    ElMessage.success('评论发表成功')
+  } catch (error) {
+    console.error('发表评论失败:', error)
+    ElMessage.error('发表评论失败，请稍后重试')
   }
-
-  recipe.value.comments.unshift(comment)
-  newComment.value = ''
-  showEmojiPicker.value = false
-  replyTo.value = null
 }
 
 const handleReply = (comment, isInModal) => {

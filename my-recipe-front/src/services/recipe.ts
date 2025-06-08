@@ -183,5 +183,11 @@ export const recipeService = {
   async getRecipeComments(recipeId: number, page: number = 1): Promise<PaginatedResponse<Comment>> {
     const response = await api.get(`/recipes/${recipeId}/comments?page=${page}`)
     return response.data
+  },
+
+  // 发表评论
+  async createComment(recipeId: number, content: string): Promise<Comment> {
+    const response = await api.post(`/recipes/${recipeId}/comments`, { content })
+    return response.data
   }
 } 

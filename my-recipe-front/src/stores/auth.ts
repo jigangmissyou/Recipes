@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 
 const authApi = axios.create({
-  baseURL: '/api/v1',
+  baseURL: 'http://localhost/api/v1',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
