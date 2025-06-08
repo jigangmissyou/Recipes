@@ -48,24 +48,33 @@
                 />
                 <div class="card-body">
                   <h5 class="card-title">{{ recipe.name }}</h5>
-                  <p class="card-text text-muted">
-                    <i class="fas fa-clock"></i> {{ recipe.prep_time }} + {{ recipe.cook_time }}
-                  </p>
+                  <div class="recipe-stats">
+                    <div class="stat-item">
+                      <i class="fas fa-clock"></i>
+                      <span>Prep: {{ recipe.prep_time }} mins</span>
+                    </div>
+                    <div class="stat-item">
+                      <i class="fas fa-fire"></i>
+                      <span>Cook: {{ recipe.cook_time }} mins</span>
+                    </div>
+                    <div class="stat-item">
+                      <i class="fas fa-signal"></i>
+                      <span>{{ recipe.difficulty }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <i class="fas fa-heart"></i>
+                      <span>{{ recipe.likes_count || 0 }}</span>
+                    </div>
+                  </div>
                   <div class="recipe-tags mb-2">
                     <span v-for="tag in recipe.tags" :key="tag.id" class="badge bg-secondary me-1">
                       {{ tag.name }}
                     </span>
                   </div>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-like">
-                        <i class="fas fa-heart"></i> {{ recipe.likes_count || 0 }}
-                      </button>
-                      <button class="btn btn-sm btn-like">
-                        <i class="fas fa-comment"></i> {{ recipe.comments_count || 0 }}
-                      </button>
-                    </div>
-                    <small class="text-muted">By {{ recipe.user.nickname }}</small>
+                  <div class="d-flex justify-content-end align-items-center">
+                    <small class="text-muted">
+                      <i class="fas fa-user"></i> By {{ recipe.user.nickname }}
+                    </small>
                   </div>
                 </div>
               </div>
@@ -267,21 +276,50 @@
     object-fit: cover;
   }
   
+  .recipe-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #555;
+    font-size: 14px;
+  }
+  
+  .stat-item i {
+    color: #ff5252;
+    font-size: 14px;
+  }
+  
   .recipe-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
   }
   
-  .btn-like {
+  .btn-like i {
     color: #666;
-    background: none;
-    border: none;
-    padding: 4px 8px;
+    font-size: 16px;
   }
   
-  .btn-like:hover {
+  .btn-like:hover i {
     color: #ff5252;
+  }
+  
+  .text-muted {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .text-muted i {
+    color: #ff5252;
+    font-size: 14px;
   }
   
   .bottom-nav {
