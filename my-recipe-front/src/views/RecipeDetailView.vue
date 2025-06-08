@@ -345,7 +345,7 @@ const submitComment = async () => {
     const comment = await recipeService.createComment(
       Number(route.params.id), 
       newComment.value,
-      replyTo.value?.id || null  // 添加 parent_id 参数
+      replyTo.value?.id || null  // 传递 parent_id
     )
     // 重新获取评论列表，确保显示最新数据
     await fetchComments()

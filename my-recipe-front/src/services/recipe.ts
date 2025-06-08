@@ -186,8 +186,22 @@ export const recipeService = {
   },
 
   // 发表评论
-  async createComment(recipeId: number, content: string): Promise<Comment> {
-    const response = await api.post(`/recipes/${recipeId}/comments`, { content })
+  async createComment(recipeId: number, content: string, parentId: number | null = null): Promise<Comment> {
+    const response = await api.post(`/recipes/${recipeId}/comments`, { 
+      content,
+      parent_id: parentId
+    })
     return response.data
+  },
+
+  // 获取用户评论
+  async getMyComments(page: number = 1, perPage: number = 20): Promise<PaginatedResponse<Comment>> {
+    const response = await api.get(`/my-comments?page=${page}&per_page=${perPage}`)
+    return response.data
+  },
+
+  // 删除评论
+  async deleteComment(recipeId: number, commentId: number): Promise<void> {
+    await api.delete(`/recipes/${recipeId}/comments/${commentId}`)
   }
 } 
