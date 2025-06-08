@@ -182,11 +182,34 @@
               <i class="fas fa-reply"></i> Reply
             </button>
           </div>
+          
+          <!-- 添加回复列表 -->
+          <div class="replies-list" v-if="comment.replies && comment.replies.length > 0">
+            <div class="reply-item" v-for="reply in comment.replies" :key="reply.id">
+              <div class="reply-header">
+                <img 
+                  :src="reply.user.avatar || 'https://i.pravatar.cc/150?img=1'" 
+                  :alt="reply.user.nickname" 
+                  class="reply-avatar"
+                >
+                <div>
+                  <span class="reply-author">{{ reply.user.nickname }}</span>
+                  <span class="reply-time">{{ formatDate(reply.created_at) }}</span>
+                </div>
+              </div>
+              <div class="reply-content">
+                {{ reply.content }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <!-- 弹出层内的评论输入框 -->
       <div class="comments-modal-footer">
-        <div class="comment-input-area">
+        <div class="comment-input-area" :class="{ 'replying': replyTo }">
+          <div v-if="replyTo" class="reply-to-indicator">
+            回复 {{ replyTo.user.nickname }}:
+          </div>
           <button class="btn-emoji" @click="toggleEmojiPicker">
             <i class="far fa-smile"></i>
           </button>
@@ -194,7 +217,7 @@
             type="text" 
             class="comment-input" 
             v-model="newComment" 
-            :placeholder="replyTo ? `Reply to ${replyTo.author}...` : 'Write a comment...'"
+            :placeholder="replyTo ? `回复 ${replyTo.user.nickname}...` : '写评论...'"
             @keyup.enter="submitComment"
           >
           <button class="btn-send" @click="submitComment" :disabled="!newComment.trim()">
@@ -214,7 +237,10 @@
 
     <!-- 固定的底部评论栏 -->
     <div class="comment-bar" v-if="recipe && !isCommentsModalVisible">
-      <div class="comment-input-area">
+      <div class="comment-input-area" :class="{ 'replying': replyTo }">
+        <div v-if="replyTo" class="reply-to-indicator">
+          回复 {{ replyTo.user.nickname }}:
+        </div>
         <button class="btn-emoji" @click="toggleEmojiPicker">
           <i class="far fa-smile"></i>
         </button>
@@ -222,7 +248,7 @@
           type="text" 
           class="comment-input" 
           v-model="newComment" 
-          :placeholder="replyTo ? `Reply to ${replyTo.author}...` : 'Write a comment...'"
+          :placeholder="replyTo ? `回复 ${replyTo.user.nickname}...` : '写评论...'"
           @keyup.enter="submitComment"
         >
         <button class="btn-send" @click="submitComment" :disabled="!newComment.trim()">
@@ -316,7 +342,11 @@ const submitComment = async () => {
   if (!newComment.value.trim()) return
 
   try {
-    const comment = await recipeService.createComment(Number(route.params.id), newComment.value)
+    const comment = await recipeService.createComment(
+      Number(route.params.id), 
+      newComment.value,
+      replyTo.value?.id || null  // 添加 parent_id 参数
+    )
     // 重新获取评论列表，确保显示最新数据
     await fetchComments()
     // 清空评论输入框
@@ -326,7 +356,7 @@ const submitComment = async () => {
     // 清除回复状态
     replyTo.value = null
     // 显示成功提示
-    ElMessage.success('评论发表成功')
+    ElMessage.success(replyTo.value ? '回复发表成功' : '评论发表成功')
   } catch (error) {
     console.error('发表评论失败:', error)
     ElMessage.error('发表评论失败，请稍后重试')
@@ -335,12 +365,19 @@ const submitComment = async () => {
 
 const handleReply = (comment, isInModal) => {
   replyTo.value = comment
-  newComment.value = `@${comment.author} `
+  newComment.value = ''  // 清空输入框
   if (!isInModal) {
     // 在预览中回复，需要打开弹出层
     isCommentsModalVisible.value = true
   }
   showEmojiPicker.value = false
+  // 聚焦到输入框
+  nextTick(() => {
+    const input = document.querySelector('.comment-input')
+    if (input) {
+      input.focus()
+    }
+  })
 }
 
 const likeComment = (comment) => {
@@ -851,5 +888,60 @@ const loadMoreComments = () => {
   background-color: #f8f9fa;
   padding: 4px 8px;
   border-radius: 4px;
+}
+
+/* 添加回复相关的样式 */
+.replies-list {
+  margin-left: 50px;
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid #eee;
+}
+
+.reply-item {
+  padding: 10px 0;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.reply-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.reply-author {
+  font-weight: 500;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.reply-time {
+  color: #666;
+  font-size: 12px;
+}
+
+.reply-content {
+  font-size: 14px;
+  color: #333;
+  margin-left: 32px;
+}
+
+/* 修改评论输入框的样式，当处于回复状态时 */
+.comment-input-area.replying {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.reply-to-indicator {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
 }
 </style>
