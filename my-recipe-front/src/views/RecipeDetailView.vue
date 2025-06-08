@@ -31,23 +31,28 @@
           <img :src="recipe.cover_image" :alt="recipe.name">
         </div>
         <div class="recipe-stats">
-            <div class="stat-item">
-              <i class="fas fa-clock"></i>
-              <span>Prep: {{ recipe.prep_time }} mins</span>
-            </div>
-            <div class="stat-item">
-              <i class="fas fa-fire"></i>
-              <span>Cook: {{ recipe.cook_time }} mins</span>
-            </div>
-            <div class="stat-item">
-              <i class="fas fa-signal"></i>
-              <span>{{ recipe.difficulty }}</span>
-            </div>
-            <div class="stat-item">
-              <i class="fas fa-user"></i>
-              <span>By {{ recipe.user.nickname }}</span>
-            </div>
+          <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <span>Prep: {{ recipe.prep_time }} mins</span>
           </div>
+          <div class="stat-item">
+            <i class="fas fa-fire"></i>
+            <span>Cook: {{ recipe.cook_time }} mins</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-signal"></i>
+            <span>{{ recipe.difficulty }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-heart"></i>
+            <span>{{ recipe.favorites_count || 0 }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-user"></i>
+            <span>By {{ recipe.user.nickname }}</span>
+          </div>
+        </div>
+
         <!-- Basic information -->
         <div class="recipe-info">
           <div class="recipe-header">
@@ -271,12 +276,15 @@ import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { recipeService } from '../services/recipe'
 import { ElMessage } from 'element-plus'
+import api from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
 const recipe = ref(null)
 const loading = ref(true)
 const error = ref(false)
+const isLiked = ref(false)
+const isBookmarked = ref(false)
 
 // Comments related state
 const isCommentsModalVisible = ref(false)
@@ -303,6 +311,8 @@ const fetchRecipeDetail = async () => {
     const id = Number(route.params.id)
     const recipeData = await recipeService.getRecipeDetail(id)
     recipe.value = recipeData
+    isLiked.value = recipeData.is_favorited === true
+    console.log('Is favorited:', recipeData.is_favorited)
   } catch (error) {
     console.error('Failed to fetch recipe:', error)
     alert('Failed to fetch recipe details, please try again')
@@ -313,12 +323,20 @@ const fetchRecipeDetail = async () => {
 
 const goBack = () => window.history.back()
 
-const isLiked = ref(false)
-const isBookmarked = ref(false)
-
-const toggleLike = () => {
-  isLiked.value = !isLiked.value
-  // TODO: 调用点赞 API
+const toggleLike = async () => {
+  try {
+    if (!recipe.value) return
+    
+    await api.post(`/recipes/${recipe.value.id}/favorite`)
+    
+    isLiked.value = !isLiked.value
+    recipe.value.favorites_count = isLiked.value 
+      ? (recipe.value.favorites_count || 0) + 1 
+      : (recipe.value.favorites_count || 1) - 1
+  } catch (error) {
+    console.error('Failed to toggle like:', error)
+    ElMessage.error('Failed to update like status')
+  }
 }
 
 const toggleBookmark = () => {
@@ -514,34 +532,33 @@ const loadMoreComments = () => {
   font-size: 16px;
 }
 
-.btn-group {
+.recipe-actions {
   display: flex;
-  gap: 12px;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 0 15px;
 }
 
-.btn-like {
+.action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px 16px;
-  border: none;
+  border: 1px solid #ff5252;
   border-radius: 20px;
-  background-color: #fff;
+  background: white;
   color: #666;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-like:hover {
-  background-color: #fff5f5;
+.action-btn:hover {
+  background: #fff5f5;
   color: #ff5252;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn-like i {
+.action-btn i {
   font-size: 16px;
 }
 

@@ -23,6 +23,14 @@
               <input v-model="form.name" type="text" class="form-control" placeholder="Enter recipe name" required>
             </div>
             <div class="mb-3">
+              <label class="form-label">Category</label>
+              <select v-model="form.category_id" class="form-select">
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Description</label>
               <textarea v-model="form.description" class="form-control" rows="3" placeholder="Describe your recipe..." required></textarea>
             </div>
@@ -37,14 +45,14 @@
             <div class="row">
               <div class="col-6">
                 <div class="mb-3">
-                  <label class="form-label">Prep Time</label>
-                  <input v-model="form.prep_time" type="text" class="form-control" placeholder="e.g. 5 minutes" required>
+                  <label class="form-label">Prep Time (mins)</label>
+                  <input v-model="form.prep_time" type="number" class="form-control" placeholder="e.g. 5" required>
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label class="form-label">Cook Time</label>
-                  <input v-model="form.cook_time" type="text" class="form-control" placeholder="e.g. 15 minutes" required>
+                  <label class="form-label">Cook Time (mins)</label>
+                  <input v-model="form.cook_time" type="number" class="form-control" placeholder="e.g. 15" required>
                 </div>
               </div>
             </div>
@@ -136,6 +144,7 @@
             <h5>Tags</h5>
             <div class="mb-3">
               <input 
+                v-model="newTag"
                 type="text" 
                 class="form-control" 
                 placeholder="Add tags (press Enter to add)"
@@ -211,6 +220,21 @@ const form = ref({
 })
 
 const difficultyOptions = ['Easy', 'Medium', 'Hard']
+
+const categories = ref([
+  { id: 1, name: 'Main Courses' },
+  { id: 2, name: 'Breakfast' },
+  { id: 3, name: 'Lunch' },
+  { id: 4, name: 'Dinner' },
+  { id: 5, name: 'Dessert' },
+  { id: 6, name: 'Snacks' },
+  { id: 7, name: 'Drinks' },
+  { id: 8, name: 'Vegetarian' },
+  { id: 9, name: 'Vegan' },
+  { id: 10, name: 'Gluten-Free' }
+])
+
+const newTag = ref('')
 
 const addIngredient = () => {
   form.value.ingredients.push({ name: '', quantity: '', unit: '', notes: '' })
@@ -303,6 +327,10 @@ const handleSubmit = async () => {
       return
     }
 
+    // 确保 prep_time 和 cook_time 是数字
+    form.value.prep_time = form.value.prep_time.toString()
+    form.value.cook_time = form.value.cook_time.toString()
+
     loading.value = true
     const response = await recipeService.createRecipe(form.value)
     router.push(`/recipe/${response.id}`)
@@ -340,12 +368,10 @@ onMounted(() => {
   initSortable()
 })
 
-const addTag = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const tag = input.value.trim()
-  if (tag && !form.value.tags.includes(tag)) {
-    form.value.tags.push(tag)
-    input.value = ''
+const addTag = () => {
+  if (newTag.value.trim()) {
+    form.value.tags.push(newTag.value.trim())
+    newTag.value = ''
   }
 }
 
@@ -594,6 +620,21 @@ const triggerStepImageUpload = (idx: number) => {
   color: white;
 }
 
+.form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background-color: white;
+}
+
+.form-select:focus {
+  border-color: #ff5252;
+  box-shadow: 0 0 0 0.2rem rgba(255, 82, 82, 0.25);
+}
+
 .tags-container {
   display: flex;
   flex-wrap: wrap;
@@ -605,11 +646,17 @@ const triggerStepImageUpload = (idx: number) => {
   align-items: center;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
+  background-color: #ff5252;
 }
 
 .btn-close {
   padding: 0.25rem;
   font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.btn-close:hover {
+  opacity: 1;
 }
 
 .btn:disabled {

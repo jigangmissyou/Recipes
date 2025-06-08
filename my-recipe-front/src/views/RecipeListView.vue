@@ -63,7 +63,7 @@
                     </div>
                     <div class="stat-item">
                       <i class="fas fa-heart"></i>
-                      <span>{{ recipe.likes_count || 0 }}</span>
+                      <span>{{ recipe.favorites_count || 0 }}</span>
                     </div>
                   </div>
                   <div class="recipe-tags mb-2">
@@ -73,7 +73,7 @@
                   </div>
                   <div class="d-flex justify-content-end align-items-center">
                     <small class="text-muted">
-                      <i class="fas fa-user"></i> By {{ recipe.user.nickname }}
+                      <i class="fas fa-user"></i> {{ recipe.user.nickname }}
                     </small>
                   </div>
                 </div>
