@@ -1,6 +1,6 @@
 <template>
     <div>
-      <!-- 顶部导航栏 -->
+      <!-- Top Navigation Bar -->
       <nav class="navbar">
         <div class="nav-left">
           <button class="btn-icon" @click="showCategoryMenu = true">
@@ -24,14 +24,14 @@
         </div>
       </nav>
   
-      <!-- 分类菜单 -->
+      <!-- Category Menu -->
       <CategoryMenu 
         :show="showCategoryMenu"
         @close="showCategoryMenu = false"
         @select="handleCategorySelect"
       />
   
-      <!-- 内容区域 -->
+      <!-- Content Area -->
       <div class="content-wrapper">
         <div class="container">
           <div class="row" id="recipeList">
@@ -71,24 +71,24 @@
               </div>
             </div>
             <div v-if="!loading && recipes.length === 0" class="text-center text-muted py-5">
-              暂无菜谱
+              No recipes available
             </div>
           </div>
           
-          <!-- 加载动画 -->
+          <!-- Loading Animation -->
           <div v-if="loading" class="loading-animation">
-            <div class="vegetable-bounce">
-              <i class="fas fa-carrot vegetable-icon"></i>
-            </div>
-            <p class="loading-text">加载更多菜谱...</p>
+            <i class="fas fa-spinner fa-spin vegetable-icon"></i>
+            <p>Loading...</p>
           </div>
-          <div v-else-if="!hasMore" class="text-center py-4 text-muted">
-            没有更多菜谱了
+          <div v-if="hasMore && !loading" class="text-center py-4">
+            <button class="btn btn-outline-primary" @click="loadMore">
+              Load More
+            </button>
           </div>
         </div>
       </div>
   
-      <!-- 底部导航栏 -->
+      <!-- Bottom Navigation Bar -->
       <nav class="bottom-nav">
         <router-link to="/" class="nav-item active">
           <i class="fas fa-home"></i>
@@ -130,7 +130,7 @@
   const searchQuery = ref('')
   const hasNewNotifications = ref(false)
   
-  // 获取菜谱列表
+  // Fetch recipe list
   const fetchRecipes = async (page: number = 1) => {
     try {
       loading.value = true
@@ -144,39 +144,39 @@
       currentPage.value = response.current_page
     } catch (error) {
       console.error('Failed to fetch recipes:', error)
-      alert('获取菜谱列表失败，请重试')
+      alert('Failed to fetch recipe list, please try again')
     } finally {
       loading.value = false
     }
   }
   
-  // 加载更多
+  // Load more recipes
   const loadMore = () => {
     if (!loading.value && hasMore.value) {
       fetchRecipes(currentPage.value + 1)
     }
   }
   
-  // 跳转到详情页
+  // Go to recipe detail page
   const goToDetail = (id: number) => {
     router.push(`/recipe/${id}`)
   }
   
-  // 处理搜索
+  // Handle search
   const handleSearch = () => {
-    // TODO: 实现搜索功能
+    // TODO: Implement search functionality
     console.log('Search query:', searchQuery.value)
   }
   
-  // 处理分类选择
+  // Handle category selection
   const handleCategorySelect = (categoryId: number) => {
-    // TODO: 实现分类筛选
+    // TODO: Implement category filter
     console.log('Selected category:', categoryId)
   }
   
-  // 显示通知
+  // Show notifications
   const showNotifications = () => {
-    // TODO: 实现通知功能
+    // TODO: Implement notification functionality
     console.log('Show notifications')
   }
   
@@ -248,7 +248,7 @@
   }
   
   .content-wrapper {
-    padding-top: 56px;
+    padding-top: 76px;
     padding-bottom: 60px;
   }
   

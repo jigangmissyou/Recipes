@@ -1,6 +1,6 @@
 <template>
   <div class="recipe-detail">
-    <!-- 顶部导航栏 -->
+    <!-- Top navigation bar -->
     <nav class="navbar navbar-light top-nav fixed-top">
       <div class="container-fluid d-flex align-items-center">
         <button class="btn-nav" @click="goBack">
@@ -18,16 +18,15 @@
       </div>
     </nav>
 
-    <!-- 内容区域 -->
+    <!-- Content area -->
     <div class="content-wrapper">
-      <div v-if="loading" class="loading-container">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+      <div v-if="loading" class="loading-animation">
+        <i class="fas fa-spinner fa-spin vegetable-icon"></i>
+        <p>Loading...</p>
       </div>
 
       <div v-else-if="recipe" class="container">
-        <!-- 封面图片 -->
+        <!-- Cover image -->
         <div class="cover-image">
           <img :src="recipe.cover_image" :alt="recipe.name">
         </div>
@@ -49,7 +48,7 @@
               <span>By {{ recipe.user.nickname }}</span>
             </div>
           </div>
-        <!-- 基本信息 -->
+        <!-- Basic information -->
         <div class="recipe-info">
           <div class="recipe-header">
             <!-- <h1 class="recipe-title">{{ recipe.name }}</h1> -->
@@ -68,7 +67,7 @@
           </div> -->
         </div>
 
-        <!-- 食材清单 -->
+        <!-- Ingredients list -->
         <div class="recipe-section">
           <h3>Ingredients</h3>
           <ul class="ingredients-list">
@@ -83,7 +82,7 @@
           </ul>
         </div>
 
-        <!-- 烹饪步骤 -->
+        <!-- Cooking steps -->
         <div class="steps-section">
           <h3>Cooking Steps</h3>
           <div class="steps-list">
@@ -97,7 +96,7 @@
           </div>
         </div>
 
-        <!-- 添加分类和标签部分 -->
+        <!-- Add category and tag section -->
         <div class="recipe-meta-section">
           <div class="category-section">
             <h4>Category</h4>
@@ -114,7 +113,7 @@
           </div>
         </div>
 
-        <!-- 评论预览 -->
+        <!-- Comments preview -->
         <div class="comments-preview" v-if="comments.length > 0">
           <h4>Comments</h4>
           <div class="comments-container">
@@ -150,7 +149,7 @@
       </div>
     </div>
 
-    <!-- 评论弹出层 -->
+    <!-- Comments modal -->
     <div class="comments-modal" :class="{ show: isCommentsModalVisible }" v-if="recipe">
       <div class="comments-modal-header">
         <h5>Comments</h5>
@@ -183,7 +182,7 @@
             </button>
           </div>
           
-          <!-- 添加回复列表 -->
+          <!-- Add reply list -->
           <div class="replies-list" v-if="comment.replies && comment.replies.length > 0">
             <div class="reply-item" v-for="reply in comment.replies" :key="reply.id">
               <div class="reply-header">
@@ -204,11 +203,11 @@
           </div>
         </div>
       </div>
-      <!-- 弹出层内的评论输入框 -->
+      <!-- Modal comments input area -->
       <div class="comments-modal-footer">
         <div class="comment-input-area" :class="{ 'replying': replyTo }">
           <div v-if="replyTo" class="reply-to-indicator">
-            回复 {{ replyTo.user.nickname }}:
+            Reply to {{ replyTo.user.nickname }}:
           </div>
           <button class="btn-emoji" @click="toggleEmojiPicker">
             <i class="far fa-smile"></i>
@@ -217,14 +216,14 @@
             type="text" 
             class="comment-input" 
             v-model="newComment" 
-            :placeholder="replyTo ? `回复 ${replyTo.user.nickname}...` : '写评论...'"
+            :placeholder="replyTo ? `Reply to ${replyTo.user.nickname}...` : 'Write a comment...'"
             @keyup.enter="submitComment"
           >
           <button class="btn-send" @click="submitComment" :disabled="!newComment.trim()">
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>
-        <!-- 表情选择器 -->
+        <!-- Emoji picker -->
         <div class="emoji-picker" v-if="showEmojiPicker">
           <div class="emoji-list">
             <span v-for="emoji in emojis" :key="emoji" @click="addEmoji(emoji)">
@@ -235,11 +234,11 @@
       </div>
     </div>
 
-    <!-- 固定的底部评论栏 -->
+    <!-- Fixed bottom comment bar -->
     <div class="comment-bar" v-if="recipe && !isCommentsModalVisible">
       <div class="comment-input-area" :class="{ 'replying': replyTo }">
         <div v-if="replyTo" class="reply-to-indicator">
-          回复 {{ replyTo.user.nickname }}:
+          Reply to {{ replyTo.user.nickname }}:
         </div>
         <button class="btn-emoji" @click="toggleEmojiPicker">
           <i class="far fa-smile"></i>
@@ -248,14 +247,14 @@
           type="text" 
           class="comment-input" 
           v-model="newComment" 
-          :placeholder="replyTo ? `回复 ${replyTo.user.nickname}...` : '写评论...'"
+          :placeholder="replyTo ? `Reply to ${replyTo.user.nickname}...` : 'Write a comment...'"
           @keyup.enter="submitComment"
         >
         <button class="btn-send" @click="submitComment" :disabled="!newComment.trim()">
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
-      <!-- 表情选择器 -->
+      <!-- Emoji picker -->
       <div class="emoji-picker" v-if="showEmojiPicker">
         <div class="emoji-list">
           <span v-for="emoji in emojis" :key="emoji" @click="addEmoji(emoji)">
@@ -268,7 +267,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { recipeService } from '../services/recipe'
 import { ElMessage } from 'element-plus'
@@ -279,7 +278,7 @@ const recipe = ref(null)
 const loading = ref(true)
 const error = ref(false)
 
-// 评论相关状态
+// Comments related state
 const isCommentsModalVisible = ref(false)
 const newComment = ref('')
 const showEmojiPicker = ref(false)
@@ -289,15 +288,15 @@ const commentsLoading = ref(false)
 const commentsPage = ref(1)
 const hasMoreComments = ref(true)
 
-// 表情符号列表
+// Emoji symbols list
 const emojis = ['😊', '😂', '❤️', '👍', '🎉', '🔥', '😋', '👏', '🙌', '🤔']
 
-// 显示的评论数量
+// Displayed comments
 const displayedComments = computed(() => {
   return comments.value.slice(0, 2) || []
 })
 
-// 获取食谱详情
+// Get recipe details
 const fetchRecipeDetail = async () => {
   try {
     loading.value = true
@@ -306,7 +305,7 @@ const fetchRecipeDetail = async () => {
     recipe.value = recipeData
   } catch (error) {
     console.error('Failed to fetch recipe:', error)
-    alert('获取菜谱详情失败，请重试')
+    alert('Failed to fetch recipe details, please try again')
   } finally {
     loading.value = false
   }
@@ -345,33 +344,33 @@ const submitComment = async () => {
     const comment = await recipeService.createComment(
       Number(route.params.id), 
       newComment.value,
-      replyTo.value?.id || null  // 传递 parent_id
+      replyTo.value?.id || null  // Pass parent_id
     )
-    // 重新获取评论列表，确保显示最新数据
+    // Re-fetch comments to ensure latest data
     await fetchComments()
-    // 清空评论输入框
+    // Clear comment input
     newComment.value = ''
-    // 关闭表情选择器
+    // Close emoji picker
     showEmojiPicker.value = false
-    // 清除回复状态
+    // Clear reply state
     replyTo.value = null
-    // 显示成功提示
-    ElMessage.success(replyTo.value ? '回复发表成功' : '评论发表成功')
+    // Show success notification
+    ElMessage.success(replyTo.value ? 'Reply posted successfully' : 'Comment posted successfully')
   } catch (error) {
-    console.error('发表评论失败:', error)
-    ElMessage.error('发表评论失败，请稍后重试')
+    console.error('Failed to post comment:', error)
+    ElMessage.error('Failed to post comment, please try again later')
   }
 }
 
 const handleReply = (comment, isInModal) => {
   replyTo.value = comment
-  newComment.value = ''  // 清空输入框
+  newComment.value = ''  // Clear input
   if (!isInModal) {
-    // 在预览中回复，需要打开弹出层
+    // Reply in preview, need to open modal
     isCommentsModalVisible.value = true
   }
   showEmojiPicker.value = false
-  // 聚焦到输入框
+  // Focus to input
   nextTick(() => {
     const input = document.querySelector('.comment-input')
     if (input) {
@@ -384,7 +383,7 @@ const likeComment = (comment) => {
   comment.likes++
 }
 
-// 获取评论列表
+// Get comments list
 const fetchComments = async (page = 1) => {
   try {
     commentsLoading.value = true
@@ -403,7 +402,7 @@ const fetchComments = async (page = 1) => {
   }
 }
 
-// 格式化日期
+// Format date
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   const now = new Date()
@@ -422,13 +421,13 @@ const formatDate = (dateString) => {
   }
 }
 
-// 在组件挂载时获取评论
+// Fetch comments when component is mounted
 onMounted(() => {
   fetchRecipeDetail()
   fetchComments()
 })
 
-// 加载更多评论
+// Load more comments
 const loadMoreComments = () => {
   if (!commentsLoading.value && hasMoreComments.value) {
     fetchComments(commentsPage.value + 1)
@@ -612,6 +611,7 @@ const loadMoreComments = () => {
   color: #333;
 }
 .comments-preview {
+  margin-top: 20px;
   padding: 20px;
   background: #fff;
   border-radius: 15px;
@@ -621,7 +621,7 @@ const loadMoreComments = () => {
 .comments-container {
   max-height: 400px;
   overflow-y: auto;
-  padding-bottom: 80px; /* 为固定评论框留出空间 */
+  padding-bottom: 80px; /* Space for fixed comment bar */
 }
 .comment-item {
   padding: 15px;
@@ -684,39 +684,13 @@ const loadMoreComments = () => {
 .btn-icon:hover {
   color: #ff5252;
 }
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: 20px;
-}
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ff5252;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: 20px;
+.loading-animation {
   text-align: center;
+  padding: 20px;
 }
-.error-text {
+.vegetable-icon {
+  font-size: 24px;
   color: #ff5252;
-  margin-bottom: 15px;
 }
 .comment-bar {
   position: fixed;
@@ -862,10 +836,11 @@ const loadMoreComments = () => {
   padding-bottom: 100px;
 }
 .recipe-meta-section {
+  margin-bottom: 40px;
   padding: 20px;
+  padding-bottom: 100px;
   background: #fff;
   border-radius: 15px;
-  margin: 20px 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 .category-section {
@@ -890,7 +865,7 @@ const loadMoreComments = () => {
   border-radius: 4px;
 }
 
-/* 添加回复相关的样式 */
+/* Add reply related styles */
 .replies-list {
   margin-left: 50px;
   margin-top: 10px;
@@ -932,7 +907,7 @@ const loadMoreComments = () => {
   margin-left: 32px;
 }
 
-/* 修改评论输入框的样式，当处于回复状态时 */
+/* Modify comment input styles when in reply state */
 .comment-input-area.replying {
   background-color: #f8f9fa;
   border-radius: 8px;

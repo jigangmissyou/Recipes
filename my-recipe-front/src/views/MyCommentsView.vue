@@ -1,6 +1,6 @@
 <template>
   <div class="my-comments">
-    <!-- 导航栏 -->
+    <!-- Navigation Bar -->
     <nav class="navbar">
       <button class="btn-back" @click="goBack">
         <i class="fas fa-arrow-left"></i>
@@ -8,21 +8,21 @@
       <h1>My Comments</h1>
     </nav>
 
-    <!-- 加载状态 -->
+    <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
       <p>Loading...</p>
     </div>
 
-    <!-- 错误状态 -->
+    <!-- Error State -->
     <div v-else-if="error" class="error-container">
       <p class="error-text">Failed to load comments</p>
       <button class="btn btn-primary" @click="goBack">Go Back</button>
     </div>
 
-    <!-- 内容区域 -->
+    <!-- Content Area -->
     <div v-else class="comments-content">
-      <!-- 空状态 -->
+      <!-- Empty State -->
       <div v-if="!comments.length" class="empty-state">
         <img src="https://picsum.photos/200/200" alt="No comments" class="empty-image">
         <h3>No Comments Yet</h3>
@@ -32,7 +32,7 @@
         </button>
       </div>
 
-      <!-- 评论列表 -->
+      <!-- Comments List -->
       <div v-else class="comments-list">
         <div v-for="comment in comments" :key="comment.id" class="comment-card">
           <div class="comment-header">
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- 加载更多按钮 -->
+      <!-- Load More Button -->
       <div v-if="hasMoreComments" class="load-more">
         <button class="btn btn-primary" @click="loadMore" :disabled="loading">
           {{ loading ? 'Loading...' : 'Load More' }}
@@ -119,7 +119,7 @@ const goToRecipe = (recipeId) => {
   router.push(`/recipe/${recipeId}`)
 }
 
-// 格式化日期
+// Format date to relative time
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   const now = new Date()
@@ -138,7 +138,7 @@ const formatDate = (dateString) => {
   }
 }
 
-// 添加删除评论的方法
+// Add comment deletion method
 const confirmDelete = async (comment) => {
   try {
     await ElMessageBox.confirm(
@@ -162,7 +162,7 @@ const confirmDelete = async (comment) => {
 const deleteComment = async (comment) => {
   try {
     await recipeService.deleteComment(comment.recipe_id, comment.id)
-    // 从列表中移除被删除的评论
+    // Remove the deleted comment from the list
     comments.value = comments.value.filter(c => c.id !== comment.id)
     ElMessage.success('Comment deleted successfully')
   } catch (err) {

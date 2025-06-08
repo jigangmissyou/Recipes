@@ -179,7 +179,6 @@ import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Sortable from 'sortablejs'
 import { recipeService } from '@/services/recipe'
-import type { Recipe } from '@/services/recipe'
 
 const router = useRouter()
 const goBack = () => window.history.back()
@@ -188,7 +187,7 @@ const coverInput = ref<HTMLInputElement | null>(null)
 const stepInputs = ref<HTMLInputElement[]>([])
 const loading = ref(false)
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL;
+const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL;
 
 const form = ref({
   category_id: 1,
