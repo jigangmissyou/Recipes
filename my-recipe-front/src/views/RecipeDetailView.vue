@@ -8,11 +8,11 @@
         </button>
         <h5 class="mb-0">{{ recipe?.name }}</h5>
         <div class="nav-actions">
-          <!-- <button class="btn-icon" @click="toggleLike">
-            <i class="fas" :class="isLiked ? 'fa-heart text-danger' : 'fa-heart'"></i>
-          </button> -->
+          <button class="btn-icon" @click="toggleLike">
+            <i class="fas fa-heart" :class="{ 'text-danger': isLiked }"></i>
+          </button>
           <button class="btn-icon" @click="toggleBookmark">
-            <i class="fas" :class="isBookmarked ? 'fa-bookmark text-primary' : 'fa-bookmark'"></i>
+            <i class="fas fa-bookmark" :class="{ 'text-danger': isBookmarked }"></i>
           </button>
         </div>
       </div>
@@ -313,8 +313,17 @@ const fetchRecipeDetail = async () => {
 
 const goBack = () => window.history.back()
 
+const isLiked = ref(false)
+const isBookmarked = ref(false)
+
 const toggleLike = () => {
-  recipe.value.likes++
+  isLiked.value = !isLiked.value
+  // TODO: 调用点赞 API
+}
+
+const toggleBookmark = () => {
+  isBookmarked.value = !isBookmarked.value
+  // TODO: 调用收藏 API
 }
 
 const showComments = () => {
@@ -677,12 +686,25 @@ const loadMoreComments = () => {
 .btn-icon {
   background: none;
   border: none;
-  color: #333;
-  font-size: 20px;
-  padding: 0;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
-.btn-icon:hover {
+
+.btn-icon i {
+  font-size: 20px;
+  color: #666;
+}
+
+/* 点赞和收藏状态 */
+.btn-icon.liked i.fa-heart,
+.btn-icon.bookmarked i.fa-bookmark {
   color: #ff5252;
+}
+
+/* 简单的悬停效果 */
+.btn-icon:hover {
+  transform: scale(1.1);
 }
 .loading-animation {
   text-align: center;
@@ -918,5 +940,9 @@ const loadMoreComments = () => {
   font-size: 12px;
   color: #666;
   margin-bottom: 4px;
+}
+
+.text-danger {
+  color: #ff5252 !important;
 }
 </style>
