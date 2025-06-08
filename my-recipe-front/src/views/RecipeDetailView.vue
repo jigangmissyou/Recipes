@@ -115,15 +115,19 @@
         </div>
 
         <!-- 评论预览 -->
-        <div class="comments-preview" v-if="recipe?.comments?.length > 0">
+        <div class="comments-preview" v-if="comments.length > 0">
           <h4>Comments</h4>
           <div class="comments-container">
-            <div class="comment-item" v-for="comment in displayedComments" :key="comment.author">
+            <div class="comment-item" v-for="comment in displayedComments" :key="comment.id">
               <div class="comment-header">
-                <img :src="comment.avatar" :alt="comment.author" class="comment-avatar">
+                <img 
+                  :src="comment.user.avatar || 'https://i.pravatar.cc/150?img=1'" 
+                  :alt="comment.user.nickname" 
+                  class="comment-avatar"
+                >
                 <div>
-                  <span class="comment-author">{{ comment.author }}</span>
-                  <span class="comment-time">{{ comment.time }}</span>
+                  <span class="comment-author">{{ comment.user.nickname }}</span>
+                  <span class="comment-time">{{ formatDate(comment.created_at) }}</span>
                 </div>
               </div>
               <div class="comment-content">
@@ -131,14 +135,14 @@
               </div>
               <div class="comment-actions">
                 <button @click="likeComment(comment)">
-                  <i class="fas fa-heart"></i> {{ comment.likes }}
+                  <i class="fas fa-heart"></i> {{ comment.likes || 0 }}
                 </button>
                 <button @click="handleReply(comment, false)">
                   <i class="fas fa-reply"></i> Reply
                 </button>
               </div>
             </div>
-            <button v-if="recipe.comments.length > 2" class="load-more-btn" @click="showComments">
+            <button v-if="comments.length > 2" class="load-more-btn" @click="showComments">
               Load More Comments
             </button>
           </div>
@@ -155,12 +159,16 @@
         </button>
       </div>
       <div class="comments-modal-body">
-        <div class="comment-item" v-for="comment in recipe.comments" :key="comment.author">
+        <div class="comment-item" v-for="comment in comments" :key="comment.id">
           <div class="comment-header">
-            <img :src="comment.avatar" :alt="comment.author" class="comment-avatar">
+            <img 
+              :src="comment.user.avatar || 'https://i.pravatar.cc/150?img=1'" 
+              :alt="comment.user.nickname" 
+              class="comment-avatar"
+            >
             <div>
-              <span class="comment-author">{{ comment.author }}</span>
-              <span class="comment-time">{{ comment.time }}</span>
+              <span class="comment-author">{{ comment.user.nickname }}</span>
+              <span class="comment-time">{{ formatDate(comment.created_at) }}</span>
             </div>
           </div>
           <div class="comment-content">
@@ -168,7 +176,7 @@
           </div>
           <div class="comment-actions">
             <button @click="likeComment(comment)">
-              <i class="fas fa-heart"></i> {{ comment.likes }}
+              <i class="fas fa-heart"></i> {{ comment.likes || 0 }}
             </button>
             <button @click="handleReply(comment, true)">
               <i class="fas fa-reply"></i> Reply
@@ -249,13 +257,17 @@ const isCommentsModalVisible = ref(false)
 const newComment = ref('')
 const showEmojiPicker = ref(false)
 const replyTo = ref(null)
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentsPage = ref(1)
+const hasMoreComments = ref(true)
 
 // 表情符号列表
 const emojis = ['😊', '😂', '❤️', '👍', '🎉', '🔥', '😋', '👏', '🙌', '🤔']
 
 // 显示的评论数量
 const displayedComments = computed(() => {
-  return recipe.value?.comments?.slice(0, 2) || []
+  return comments.value.slice(0, 2) || []
 })
 
 // 获取食谱详情
@@ -264,147 +276,6 @@ const fetchRecipeDetail = async () => {
     loading.value = true
     const id = Number(route.params.id)
     const recipeData = await recipeService.getRecipeDetail(id)
-    
-    // 添加模拟评论数据
-    recipeData.comments = [
-      {
-        author: 'John Doe',
-        avatar: 'https://i.pravatar.cc/150?img=1',
-        content: 'This recipe looks amazing! I can\'t wait to try it.',
-        time: '2 hours ago',
-        likes: 12,
-        replies: [
-          {
-            author: 'Recipe Author',
-            avatar: 'https://i.pravatar.cc/150?img=5',
-            content: 'Thank you! Let me know how it turns out!',
-            time: '1 hour ago',
-            likes: 3
-          }
-        ]
-      },
-      {
-        author: 'Jane Smith',
-        avatar: 'https://i.pravatar.cc/150?img=2',
-        content: 'I made this last night and it was delicious! The instructions were very clear.',
-        time: '5 hours ago',
-        likes: 8,
-        replies: []
-      },
-      {
-        author: 'Mike Johnson',
-        avatar: 'https://i.pravatar.cc/150?img=3',
-        content: 'Great recipe! I added some extra spices and it turned out perfect.',
-        time: '1 day ago',
-        likes: 15,
-        replies: []
-      },
-      {
-        author: 'Sarah Wilson',
-        avatar: 'https://i.pravatar.cc/150?img=4',
-        content: 'The presentation is beautiful! What camera do you use for the photos?',
-        time: '1 day ago',
-        likes: 6,
-        replies: [
-          {
-            author: 'Recipe Author',
-            avatar: 'https://i.pravatar.cc/150?img=5',
-            content: 'I use a Canon EOS R5 with a 50mm lens. Natural lighting works best!',
-            time: '23 hours ago',
-            likes: 4
-          }
-        ]
-      },
-      {
-        author: 'David Brown',
-        avatar: 'https://i.pravatar.cc/150?img=6',
-        content: 'Can I substitute almond milk for regular milk?',
-        time: '2 days ago',
-        likes: 3,
-        replies: [
-          {
-            author: 'Recipe Author',
-            avatar: 'https://i.pravatar.cc/150?img=5',
-            content: 'Yes, almond milk works great as a substitute!',
-            time: '2 days ago',
-            likes: 2
-          }
-        ]
-      },
-      {
-        author: 'Emily Davis',
-        avatar: 'https://i.pravatar.cc/150?img=7',
-        content: 'I\'ve made this three times now. It\'s become a family favorite!',
-        time: '2 days ago',
-        likes: 9,
-        replies: []
-      },
-      {
-        author: 'Tom Anderson',
-        avatar: 'https://i.pravatar.cc/150?img=8',
-        content: 'The prep time seems a bit long. Any tips to make it faster?',
-        time: '3 days ago',
-        likes: 5,
-        replies: [
-          {
-            author: 'Recipe Author',
-            avatar: 'https://i.pravatar.cc/150?img=5',
-            content: 'You can prepare the ingredients the night before to save time!',
-            time: '3 days ago',
-            likes: 7
-          }
-        ]
-      },
-      {
-        author: 'Lisa Chen',
-        avatar: 'https://i.pravatar.cc/150?img=9',
-        content: 'Beautiful plating! The colors are so vibrant.',
-        time: '3 days ago',
-        likes: 11,
-        replies: []
-      },
-      {
-        author: 'Robert Taylor',
-        avatar: 'https://i.pravatar.cc/150?img=10',
-        content: 'I added some chili flakes for extra heat. Amazing!',
-        time: '4 days ago',
-        likes: 8,
-        replies: []
-      },
-      {
-        author: 'Maria Garcia',
-        avatar: 'https://i.pravatar.cc/150?img=11',
-        content: 'This is perfect for meal prep. How long does it keep in the fridge?',
-        time: '4 days ago',
-        likes: 4,
-        replies: [
-          {
-            author: 'Recipe Author',
-            avatar: 'https://i.pravatar.cc/150?img=5',
-            content: 'It stays fresh for up to 4 days in an airtight container!',
-            time: '4 days ago',
-            likes: 3
-          }
-        ]
-      },
-      {
-        author: 'James Wilson',
-        avatar: 'https://i.pravatar.cc/150?img=12',
-        content: 'The step-by-step photos are so helpful. Great job!',
-        time: '5 days ago',
-        likes: 7,
-        replies: []
-      },
-      {
-        author: 'Sophie Martin',
-        avatar: 'https://i.pravatar.cc/150?img=13',
-        content: 'I made this for a dinner party and everyone loved it!',
-        time: '5 days ago',
-        likes: 10,
-        replies: []
-      }
-    ]
-    
     recipe.value = recipeData
   } catch (error) {
     console.error('Failed to fetch recipe:', error)
@@ -471,9 +342,56 @@ const likeComment = (comment) => {
   comment.likes++
 }
 
+// 获取评论列表
+const fetchComments = async (page = 1) => {
+  try {
+    commentsLoading.value = true
+    const response = await recipeService.getRecipeComments(Number(route.params.id), page)
+    if (page === 1) {
+      comments.value = response.data
+    } else {
+      comments.value = [...comments.value, ...response.data]
+    }
+    hasMoreComments.value = response.current_page < response.last_page
+    commentsPage.value = response.current_page
+  } catch (error) {
+    console.error('Failed to fetch comments:', error)
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+// 格式化日期
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  
+  if (minutes < 60) {
+    return `${minutes} minutes ago`
+  } else if (hours < 24) {
+    return `${hours} hours ago`
+  } else {
+    return `${days} days ago`
+  }
+}
+
+// 在组件挂载时获取评论
 onMounted(() => {
   fetchRecipeDetail()
+  fetchComments()
 })
+
+// 加载更多评论
+const loadMoreComments = () => {
+  if (!commentsLoading.value && hasMoreComments.value) {
+    fetchComments(commentsPage.value + 1)
+  }
+}
 </script>
 
 <style scoped>

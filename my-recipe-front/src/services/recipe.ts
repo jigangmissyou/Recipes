@@ -121,6 +121,22 @@ export interface CreateRecipeData {
   tags: string[]
 }
 
+export interface Comment {
+  id: number
+  recipe_id: number
+  user_id: number
+  parent_id: number | null
+  content: string
+  created_at: string
+  updated_at: string
+  user: {
+    id: number
+    nickname: string
+    avatar: string | null
+  }
+  replies: Comment[]
+}
+
 export const recipeService = {
   // 获取菜谱列表
   async getRecipes(page: number = 1): Promise<PaginatedResponse<Recipe>> {
@@ -160,6 +176,12 @@ export const recipeService = {
   // 获取菜谱详情
   async getRecipeDetail(id: number): Promise<Recipe> {
     const response = await api.get(`/recipes/${id}`)
+    return response.data
+  },
+
+  // 获取菜谱评论
+  async getRecipeComments(recipeId: number, page: number = 1): Promise<PaginatedResponse<Comment>> {
+    const response = await api.get(`/recipes/${recipeId}/comments?page=${page}`)
     return response.data
   }
 } 
