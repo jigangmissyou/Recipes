@@ -13,7 +13,7 @@
             type="text" 
             v-model="searchQuery" 
             placeholder="Search recipes..."
-            @input="handleSearch"
+            @keyup.enter="handleSearch"
           >
         </div>
         <div class="nav-right">
@@ -171,7 +171,8 @@
       const params = {
         page,
         category_id: selectedCategory.value,
-        tag_id: selectedTag.value
+        tag_id: selectedTag.value,
+        search: searchQuery.value
       }
       const response = await recipeService.getRecipes(params)
       if (page === 1) {

@@ -138,11 +138,11 @@ export interface Comment {
 }
 
 export const recipeService = {
-  // 获取菜谱列表
   async getRecipes(params: { 
     page: number; 
     category_id?: number | null;
     tag_id?: number | null;
+    search?: string | null;
   }): Promise<PaginatedResponse<Recipe>> {
     const queryParams = new URLSearchParams()
     queryParams.append('page', params.page.toString())
@@ -151,6 +151,9 @@ export const recipeService = {
     }
     if (params.tag_id) {
       queryParams.append('tag_id', params.tag_id.toString())
+    }
+    if (params.search) {
+      queryParams.append('search', params.search)
     }
     const response = await api.get(`/recipes?${queryParams.toString()}`)
     return response.data
