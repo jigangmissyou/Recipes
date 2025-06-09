@@ -105,13 +105,21 @@
         <div class="recipe-meta-section">
           <div class="category-section">
             <h4>Category</h4>
-            <span class="category-tag">{{ recipe.category.name }}</span>
+            <span class="category-badge" @click="goToCategory(recipe.category.id)">
+              <i :class="getCategoryIcon(recipe.category.id)"></i>
+              {{ recipe.category.name }}
+            </span>
           </div>
           
           <div class="tags-section" v-if="recipe.tags && recipe.tags.length > 0">
             <h4>Tags</h4>
             <div class="tags-list">
-              <span v-for="tag in recipe.tags" :key="tag.id" class="tag-item">
+              <span 
+                v-for="tag in recipe.tags" 
+                :key="tag.id" 
+                class="tag-item"
+                @click="goToTag(tag.id)"
+              >
                 {{ tag.name }}
               </span>
             </div>
@@ -459,6 +467,40 @@ const loadMoreComments = () => {
   if (!commentsLoading.value && hasMoreComments.value) {
     fetchComments(commentsPage.value + 1)
   }
+}
+
+// 获取分类图标
+const getCategoryIcon = (categoryId) => {
+  const categories = [
+    { id: 1, name: 'Main Courses', icon: 'fas fa-utensils' },
+    { id: 2, name: 'Desserts', icon: 'fas fa-ice-cream' },
+    { id: 3, name: 'Breakfast', icon: 'fas fa-coffee' },
+    { id: 4, name: 'Appetizers', icon: 'fas fa-cheese' },
+    { id: 5, name: 'Side Dishes', icon: 'fas fa-carrot' },
+    { id: 6, name: 'Salads', icon: 'fas fa-leaf' },
+    { id: 7, name: 'Soups', icon: 'fas fa-mug-hot' },
+    { id: 8, name: 'Baking', icon: 'fas fa-bread-slice' },
+    { id: 9, name: 'Drinks', icon: 'fas fa-glass-martini-alt' },
+    { id: 10, name: 'Sauces & Dips', icon: 'fas fa-mortar-pestle' }
+  ]
+  const category = categories.find(c => c.id === categoryId)
+  return category ? category.icon : 'fas fa-th-large'
+}
+
+// 跳转到分类页面
+const goToCategory = (categoryId) => {
+  router.push({
+    path: '/recipes',
+    query: { category_id: categoryId }
+  })
+}
+
+// 跳转到标签页面
+const goToTag = (tagId) => {
+  router.push({
+    path: '/recipes',
+    query: { tag_id: tagId }
+  })
 }
 </script>
 
@@ -885,23 +927,46 @@ const loadMoreComments = () => {
 .category-section {
   margin-bottom: 20px;
 }
-.category-tag {
-  background-color: #ff5252;
-  color: white;
+.category-badge {
+  display: inline-flex;
+  align-items: center;
   padding: 4px 8px;
+  background-color: #f8f9fa;
   border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.category-badge:hover {
+  background-color: #fff5f5;
+  color: #ff5252;
+}
+.category-badge i {
+  margin-right: 4px;
+  color: #ff5252;
 }
 .tags-section {
   margin-bottom: 20px;
 }
 .tags-list {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .tag-item {
-  background-color: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 4px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: #fff5f5;
+  color: #ff5252;
+  border: 1px solid #ff5252;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.tag-item:hover {
+  background-color: #ff5252;
+  color: white;
 }
 
 /* Add reply related styles */

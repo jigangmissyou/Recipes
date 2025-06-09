@@ -139,17 +139,32 @@
             </button>
           </div>
 
-          <!-- 添加标签部分 -->
+          <!-- 修改标签部分 -->
           <div class="form-section">
             <h5>Tags</h5>
             <div class="mb-3">
-              <input 
-                v-model="newTag"
-                type="text" 
-                class="form-control" 
-                placeholder="Add tags (press Enter to add)"
-                @keydown.enter.prevent="addTag"
-              >
+              <div class="tag-search-container">
+                <input 
+                  v-model="tagSearchQuery"
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Search tags..."
+                  @input="handleTagSearch"
+                  @focus="showTagDropdown = true"
+                >
+                <!-- 标签下拉列表 -->
+                <div v-if="showTagDropdown && filteredTags.length > 0" class="tag-dropdown">
+                  <div 
+                    v-for="tag in filteredTags" 
+                    :key="tag.id"
+                    class="tag-dropdown-item"
+                    @click="selectTag(tag)"
+                  >
+                    {{ tag.name }}
+                  </div>
+                </div>
+              </div>
+              <!-- 已选标签展示 -->
               <div class="tags-container mt-2">
                 <span 
                   v-for="(tag, index) in form.tags" 
@@ -184,10 +199,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Sortable from 'sortablejs'
 import { recipeService } from '@/services/recipe'
+import api from '@/services/api'
 
 const router = useRouter()
 const goBack = () => window.history.back()
@@ -234,7 +250,57 @@ const categories = ref([
   { id: 10, name: 'Gluten-Free' }
 ])
 
-const newTag = ref('')
+// 标签相关
+const allTags = ref([])
+const filteredTags = ref([])
+const tagSearchQuery = ref('')
+const showTagDropdown = ref(false)
+
+// 获取所有标签
+const fetchTags = async () => {
+  try {
+    const response = await api.get('/recipe-tags')
+    allTags.value = response.data
+    filteredTags.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch tags:', error)
+  }
+}
+
+// 处理标签搜索
+const handleTagSearch = () => {
+  if (!tagSearchQuery.value) {
+    filteredTags.value = allTags.value
+    return
+  }
+  
+  const query = tagSearchQuery.value.toLowerCase()
+  filteredTags.value = allTags.value.filter(tag => 
+    tag.name.toLowerCase().includes(query)
+  )
+}
+
+// 选择标签
+const selectTag = (tag) => {
+  if (!form.value.tags.includes(tag.name)) {
+    form.value.tags.push(tag.name)
+  }
+  tagSearchQuery.value = ''
+  showTagDropdown.value = false
+}
+
+// 移除标签
+const removeTag = (index: number) => {
+  form.value.tags.splice(index, 1)
+}
+
+// 点击外部关闭下拉框
+const handleClickOutside = (event) => {
+  const tagSearchContainer = document.querySelector('.tag-search-container')
+  if (tagSearchContainer && !tagSearchContainer.contains(event.target)) {
+    showTagDropdown.value = false
+  }
+}
 
 const addIngredient = () => {
   form.value.ingredients.push({ name: '', quantity: '', unit: '', notes: '' })
@@ -366,18 +432,13 @@ const initSortable = () => {
 
 onMounted(() => {
   initSortable()
+  fetchTags()
+  document.addEventListener('click', handleClickOutside)
 })
 
-const addTag = () => {
-  if (newTag.value.trim()) {
-    form.value.tags.push(newTag.value.trim())
-    newTag.value = ''
-  }
-}
-
-const removeTag = (index: number) => {
-  form.value.tags.splice(index, 1)
-}
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const triggerStepImageUpload = (idx: number) => {
   stepInputs.value[idx]?.click()
@@ -662,5 +723,53 @@ const triggerStepImageUpload = (idx: number) => {
 .btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.tag-search-container {
+  position: relative;
+}
+
+.tag-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.tag-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tag-dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #ff5252;
+}
+
+/* 自定义滚动条样式 */
+.tag-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tag-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.tag-dropdown::-webkit-scrollbar-thumb {
+  background: #ff5252;
+  border-radius: 3px;
+}
+
+.tag-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #ff3333;
 }
 </style>

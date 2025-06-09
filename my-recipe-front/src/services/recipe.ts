@@ -139,8 +139,20 @@ export interface Comment {
 
 export const recipeService = {
   // 获取菜谱列表
-  async getRecipes(page: number = 1): Promise<PaginatedResponse<Recipe>> {
-    const response = await api.get(`/recipes?page=${page}`)
+  async getRecipes(params: { 
+    page: number; 
+    category_id?: number | null;
+    tag_id?: number | null;
+  }): Promise<PaginatedResponse<Recipe>> {
+    const queryParams = new URLSearchParams()
+    queryParams.append('page', params.page.toString())
+    if (params.category_id) {
+      queryParams.append('category_id', params.category_id.toString())
+    }
+    if (params.tag_id) {
+      queryParams.append('tag_id', params.tag_id.toString())
+    }
+    const response = await api.get(`/recipes?${queryParams.toString()}`)
     return response.data
   },
   // 获取我的菜谱

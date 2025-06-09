@@ -1,164 +1,147 @@
 <template>
-  <div v-if="show" class="category-menu-overlay" @click="closeMenu">
-    <div class="category-menu" @click.stop>
-      <div class="category-header">
-        <h2>Categories</h2>
-        <button class="btn-close" @click="closeMenu">
+  <div class="category-menu" :class="{ 'show': show }">
+    <div class="category-menu-content">
+      <div class="category-menu-header">
+        <h3>Categories</h3>
+        <button class="btn-close" @click="$emit('close')">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="category-list">
-        <button 
+        <div 
+          class="category-item" 
+          @click="selectCategory(null)"
+        >
+          <i class="fas fa-th-large"></i>
+          <span>All Categories</span>
+        </div>
+        <div 
           v-for="category in categories" 
           :key="category.id"
           class="category-item"
-          :class="{ active: selectedCategory === category.id }"
           @click="selectCategory(category.id)"
         >
           <i :class="category.icon"></i>
           <span>{{ category.name }}</span>
-        </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps({
-  show: Boolean
-})
+const props = defineProps<{
+  show: boolean
+}>()
 
-const emit = defineEmits(['close', 'select'])
-
-const selectedCategory = ref(null)
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'select', categoryId: number | null): void
+}>()
 
 const categories = [
-  { id: 1, name: 'All', icon: 'fas fa-th-large' },
-  { id: 2, name: 'Breakfast', icon: 'fas fa-coffee' },
-  { id: 3, name: 'Lunch', icon: 'fas fa-utensils' },
-  { id: 4, name: 'Dinner', icon: 'fas fa-moon' },
-  { id: 5, name: 'Dessert', icon: 'fas fa-ice-cream' },
-  { id: 6, name: 'Snacks', icon: 'fas fa-cookie' },
-  { id: 7, name: 'Drinks', icon: 'fas fa-glass-martini-alt' },
-  { id: 8, name: 'Vegetarian', icon: 'fas fa-leaf' },
-  { id: 9, name: 'Vegan', icon: 'fas fa-seedling' },
-  { id: 10, name: 'Gluten-Free', icon: 'fas fa-bread-slice' }
+  { id: 1, name: 'Main Courses', icon: 'fas fa-utensils' },
+  { id: 2, name: 'Desserts', icon: 'fas fa-ice-cream' },
+  { id: 3, name: 'Breakfast', icon: 'fas fa-coffee' },
+  { id: 4, name: 'Appetizers', icon: 'fas fa-cheese' },
+  { id: 5, name: 'Side Dishes', icon: 'fas fa-carrot' },
+  { id: 6, name: 'Salads', icon: 'fas fa-leaf' },
+  { id: 7, name: 'Soups', icon: 'fas fa-mug-hot' },
+  { id: 8, name: 'Baking', icon: 'fas fa-bread-slice' },
+  { id: 9, name: 'Drinks', icon: 'fas fa-glass-martini-alt' },
+  { id: 10, name: 'Sauces & Dips', icon: 'fas fa-mortar-pestle' }
 ]
 
-const closeMenu = () => {
-  emit('close')
-}
-
-const selectCategory = (categoryId) => {
-  selectedCategory.value = categoryId
+const selectCategory = (categoryId: number | null) => {
   emit('select', categoryId)
-  closeMenu()
+  emit('close')
 }
 </script>
 
 <style scoped>
-.category-menu-overlay {
+.category-menu {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
-  justify-content: flex-start;
-  align-items: stretch;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
 }
 
-.category-menu {
-  width: 280px;
-  background: white;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  animation: slideIn 0.3s ease;
+.category-menu.show {
+  opacity: 1;
+  visibility: visible;
 }
 
-.category-header {
+.category-menu-content {
+  background-color: white;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 12px;
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.category-menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
 }
 
-.category-header h2 {
+.category-menu-header h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.2rem;
   color: #333;
 }
 
 .btn-close {
   background: none;
   border: none;
+  font-size: 1.2rem;
   color: #666;
-  font-size: 20px;
   cursor: pointer;
-  padding: 4px;
-}
-
-.btn-close:hover {
-  color: #ff5252;
+  padding: 5px;
 }
 
 .category-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
 .category-item {
   display: flex;
   align-items: center;
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: none;
-  color: #333;
-  font-size: 16px;
-  text-align: left;
-  cursor: pointer;
+  padding: 12px;
+  background-color: #f8f9fa;
   border-radius: 8px;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.category-item i {
-  margin-right: 12px;
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-}
-
 .category-item:hover {
-  background: #f8f9fa;
+  background-color: #fff5f5;
   color: #ff5252;
 }
 
-.category-item.active {
-  background: #fff5f5;
+.category-item i {
+  margin-right: 8px;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.category-item:hover i {
   color: #ff5252;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-/* 响应式调整 */
-@media (max-width: 480px) {
-  .category-menu {
-    width: 100%;
-  }
 }
 </style>
