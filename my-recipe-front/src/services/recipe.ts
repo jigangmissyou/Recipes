@@ -158,20 +158,17 @@ export const recipeService = {
     const response = await api.get(`/recipes?${queryParams.toString()}`)
     return response.data
   },
-  // 获取我的菜谱
+  
   async getMyRecipes(page: number = 1): Promise<PaginatedResponse<Recipe>> {
     const response = await api.get(`/recipes/my?page=${page}`)
     return response.data
   },
 
-
-  // 创建菜谱
   async createRecipe(recipe: CreateRecipeData) {
     const response = await api.post('/recipes', recipe)
     return response.data
   },
 
-  // 上传图片
   async uploadImage(file: File) {
     const formData = new FormData()
     formData.append('image', file)
@@ -188,19 +185,16 @@ export const recipeService = {
     }
   },
 
-  // 获取菜谱详情
   async getRecipeDetail(id: number): Promise<Recipe> {
     const response = await api.get(`/recipes/${id}`)
     return response.data
   },
 
-  // 获取菜谱评论
   async getRecipeComments(recipeId: number, page: number = 1): Promise<PaginatedResponse<Comment>> {
     const response = await api.get(`/recipes/${recipeId}/comments?page=${page}`)
     return response.data
   },
 
-  // 发表评论
   async createComment(recipeId: number, content: string, parentId: number | null = null): Promise<Comment> {
     const response = await api.post(`/recipes/${recipeId}/comments`, { 
       content,
@@ -209,13 +203,11 @@ export const recipeService = {
     return response.data
   },
 
-  // 获取用户评论
   async getMyComments(page: number = 1, perPage: number = 20): Promise<PaginatedResponse<Comment>> {
     const response = await api.get(`/my-comments?page=${page}&per_page=${perPage}`)
     return response.data
   },
 
-  // 删除评论
   async deleteComment(recipeId: number, commentId: number): Promise<void> {
     await api.delete(`/recipes/${recipeId}/comments/${commentId}`)
   }

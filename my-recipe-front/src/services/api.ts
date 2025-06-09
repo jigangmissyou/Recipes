@@ -8,7 +8,6 @@ const api = axios.create({
   }
 });
 
-// 请求拦截器：添加 token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
