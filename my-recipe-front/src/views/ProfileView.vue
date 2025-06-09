@@ -1,14 +1,11 @@
 <template>
   <div class="profile-page">
-    <!-- 顶部栏 -->
     <nav class="navbar">
       <h1>Profile</h1>
       <button class="btn-edit" @click="editProfile">
         <i class="fas fa-edit"></i>
       </button>
     </nav>
-
-    <!-- 用户信息卡片 -->
     <div class="profile-card">
       <img :src="user.avatar" alt="avatar" class="avatar">
       <div class="user-info">
@@ -17,24 +14,6 @@
         <p class="user-bio">{{ user.bio }}</p>
       </div>
     </div>
-
-    <!-- 统计信息 -->
-    <div class="profile-stats">
-      <div class="stat-item">
-        <div class="stat-value">{{ user.recipes }}</div>
-        <div class="stat-label">Recipes</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{{ user.likes }}</div>
-        <div class="stat-label">Likes</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{{ user.comments }}</div>
-        <div class="stat-label">Comments</div>
-      </div>
-    </div>
-
-    <!-- 菜单列表 -->
     <div class="profile-menu">
       <div class="menu-item" @click="goToMyRecipes">
         <i class="fas fa-book"></i>
@@ -49,6 +28,11 @@
       <div class="menu-item" @click="goToComments">
         <i class="fas fa-comment"></i>
         <span>My Comments</span>
+        <i class="fas fa-chevron-right right-arrow"></i>
+      </div>
+      <div class="menu-item" @click="goToHome">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
         <i class="fas fa-chevron-right right-arrow"></i>
       </div>
       <div class="menu-item" @click="logout">
@@ -111,13 +95,17 @@ const goToComments = () => {
   router.push('/my-comments')
 }
 
+const goToHome = () => {
+  router.push('/recipes')
+}
+
 const logout = async () => {
   try {
     await authStore.logout()
     router.push('/login')
   } catch (error) {
     console.error('Logout failed:', error)
-    alert('退出登录失败，请重试')
+    alert('Logout failed, please try again')
   }
 }
 

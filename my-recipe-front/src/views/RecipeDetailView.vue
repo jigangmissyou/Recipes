@@ -11,9 +11,6 @@
           <button class="btn-icon" @click="toggleLike">
             <i class="fas fa-heart" :class="{ 'text-danger': isLiked }"></i>
           </button>
-          <button class="btn-icon" @click="toggleBookmark">
-            <i class="fas fa-bookmark" :class="{ 'text-danger': isBookmarked }"></i>
-          </button>
         </div>
       </div>
     </nav>
@@ -487,7 +484,6 @@ const getCategoryIcon = (categoryId) => {
   return category ? category.icon : 'fas fa-th-large'
 }
 
-// 跳转到分类页面
 const goToCategory = (categoryId) => {
   router.push({
     path: '/recipes',
@@ -495,7 +491,6 @@ const goToCategory = (categoryId) => {
   })
 }
 
-// 跳转到标签页面
 const goToTag = (tagId) => {
   router.push({
     path: '/recipes',

@@ -1,48 +1,68 @@
 <template>
-  <div class="liked-recipes">
-    <!-- 导航栏 -->
-    <nav class="navbar">
-      <button class="btn-back" @click="goBack">
-        <i class="fas fa-arrow-left"></i>
-      </button>
-      <h1>Liked Recipes</h1>
+  <div class="recipes-page">
+    <nav class="navbar navbar-light top-nav fixed-top">
+      <div class="container-fluid d-flex align-items-center">
+        <button class="btn-nav" @click="goBack">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h5 class="mb-0 flex-grow-1 text-center" style="flex:1;">I liked recipes</h5>
+        <div class="nav-actions">
+          <span style="width:32px;display:inline-block;"></span>
+        </div>
+      </div>
     </nav>
 
-    <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Loading recipes...</p>
-    </div>
-
-    <!-- 错误状态 -->
-    <div v-else-if="error" class="error-container">
-      <p class="error-text">An error occurred while loading recipes.</p>
-      <button class="btn btn-primary" @click="goBack">Go Back</button>
-    </div>
-
-    <!-- 内容区域 -->
-    <div v-else class="recipes-content">
-      <!-- 空状态 -->
-      <div v-if="!recipes.length" class="empty-state">
-        <img src="https://picsum.photos/200/200" alt="No recipes" class="empty-image">
-        <h3>No Liked Recipes</h3>
-        <p>Start exploring and liking recipes!</p>
-        <button class="btn btn-primary" @click="goToExplore">
-          Explore Recipes
-        </button>
-      </div>
-
-      <!-- 食谱列表 -->
-      <div v-else class="recipes-grid">
-        <div v-for="recipe in recipes" :key="recipe.id" class="recipe-card" @click="goToDetail(recipe.id)">
-          <div class="recipe-image">
-            <img :src="recipe.image" :alt="recipe.title">
+    <div class="content-wrapper">
+      <div class="container">
+        <div class="recipe-list">
+          <div v-if="loading" class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
           </div>
-          <div class="recipe-info">
-            <h3>{{ recipe.title }}</h3>
-            <div class="recipe-meta">
-              <span><i class="fas fa-heart"></i> {{ recipe.likes }}</span>
-              <span><i class="fas fa-comment"></i> {{ recipe.comments }}</span>
+          <div v-else-if="recipes.length === 0" class="empty-state">
+            <i class="fas fa-heart"></i>
+            <p>You haven't liked any recipes yet</p>
+            <button class="btn-primary" @click="goToHome">Discover more recipes</button>
+          </div>
+          <div v-else class="recipe-grid">
+            <div 
+              v-for="recipe in recipes" 
+              :key="recipe.id" 
+              class="card recipe-card"
+              @click="goToDetail(recipe.id)"
+            >
+              <img
+                :src="recipe.cover_image"
+                class="card-img-top recipe-image"
+                :alt="recipe.name"
+              />
+              <div class="card-body">
+                <h5 class="card-title">{{ recipe.name }}</h5>
+                <div class="recipe-meta">
+                  <span class="category-badge">
+                    <i :class="getCategoryIcon(recipe.category_id)"></i>
+                    {{ recipe.category?.name }}
+                  </span>
+                </div>
+                <div class="recipe-stats">
+                  <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Total: {{ getTotalTime(recipe) }} mins</span>
+                  </div>
+                  <div class="stat-item">
+                    <i class="fas fa-signal"></i>
+                    <span>{{ recipe.difficulty }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <i class="fas fa-heart"></i>
+                    <span>{{ recipe.favorites_count || 0 }}</span>
+                  </div>
+                </div>
+                <div class="recipe-tags mb-2">
+                  <span v-for="tag in recipe.tags" :key="tag.id" class="tag-item">
+                    {{ tag.name }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -54,118 +74,106 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 
 const router = useRouter()
 const recipes = ref([])
-const loading = ref(true)
-const error = ref(false)
+const loading = ref(false)
+
+const categories = [
+  { id: 1, name: 'Main Courses', icon: 'fas fa-utensils' },
+  { id: 2, name: 'Desserts', icon: 'fas fa-ice-cream' },
+  { id: 3, name: 'Breakfast', icon: 'fas fa-coffee' },
+  { id: 4, name: 'Appetizers', icon: 'fas fa-cheese' },
+  { id: 5, name: 'Side Dishes', icon: 'fas fa-carrot' },
+  { id: 6, name: 'Salads', icon: 'fas fa-leaf' },
+  { id: 7, name: 'Soups', icon: 'fas fa-mug-hot' },
+  { id: 8, name: 'Baking', icon: 'fas fa-bread-slice' },
+  { id: 9, name: 'Drinks', icon: 'fas fa-glass-martini-alt' },
+  { id: 10, name: 'Sauces & Dips', icon: 'fas fa-mortar-pestle' }
+]
+
+const getCategoryIcon = (categoryId) => {
+  const category = categories.find(c => c.id === categoryId)
+  return category ? category.icon : 'fas fa-th-large'
+}
+
+const getTotalTime = (recipe) => {
+  const prepTime = parseInt(recipe.prep_time) || 0
+  const cookTime = parseInt(recipe.cook_time) || 0
+  return prepTime + cookTime
+}
 
 const fetchLikedRecipes = async () => {
   loading.value = true
-  error.value = false
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    recipes.value = [
-      {
-        id: 11,
-        title: "Strawberry Cheesecake",
-        image: "https://picsum.photos/400/300?random=11",
-        likes: 201,
-        comments: 44
-      },
-      {
-        id: 12,
-        title: "Spicy Ramen",
-        image: "https://picsum.photos/400/300?random=12",
-        likes: 178,
-        comments: 29
-      }
-    ]
-  } catch (err) {
-    error.value = true
-    console.error('Error fetching liked recipes:', err)
+    const { data } = await api.get('/recipes/favorites')
+    recipes.value = data.data
+  } catch (e) {
+    recipes.value = []
   } finally {
     loading.value = false
   }
 }
 
-const goBack = () => {
-  router.back()
-}
+const goToHome = () => router.push('/recipes')
+const goToDetail = (id) => router.push(`/recipe/${id}`)
+const goBack = () => router.back()
 
-const goToDetail = (id) => {
-  router.push(`/recipe/${id}`)
-}
-
-const goToExplore = () => {
-  router.push('/')
-}
-
-onMounted(() => {
-  fetchLikedRecipes()
-})
+onMounted(fetchLikedRecipes)
 </script>
 
 <style scoped>
-.liked-recipes {
+.recipes-page {
   min-height: 100vh;
   background: #f8f9fa;
-  padding-bottom: 80px;
 }
-.navbar {
-  background: white;
-  padding: 15px;
+.navbar.top-nav {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  height: 56px;
   display: flex;
   align-items: center;
-  gap: 15px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 100;
 }
-.btn-back {
+.btn-nav {
   background: none;
   border: none;
   color: #333;
   font-size: 20px;
-  padding: 5px;
+  padding: 6px 10px;
   cursor: pointer;
 }
-.navbar h1 {
-  margin: 0;
-  font-size: 20px;
-  color: #333;
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.recipes-content {
-  padding: 20px;
+.content-wrapper {
+  padding-top: 64px;
 }
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
+.recipe-list {
+  padding: 0 16px 16px;
 }
-.empty-image {
-  width: 200px;
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   height: 200px;
-  border-radius: 50%;
-  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #ff5252;
 }
-.empty-state h3 {
-  margin: 0 0 10px;
-  color: #333;
-}
-.empty-state p {
-  color: #666;
-  margin-bottom: 20px;
-}
-.recipes-grid {
+.recipe-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  margin-bottom: 20px;
+  padding: 20px 0;
 }
 .recipe-card {
-  background: white;
-  border-radius: 15px;
+  border: none;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
   cursor: pointer;
 }
@@ -173,77 +181,85 @@ onMounted(() => {
   transform: translateY(-5px);
 }
 .recipe-image {
-  position: relative;
   height: 200px;
-}
-.recipe-image img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
-.recipe-info {
+.card-body {
   padding: 15px;
 }
-.recipe-info h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
+.card-title {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
   color: #333;
 }
 .recipe-meta {
-  display: flex;
-  gap: 15px;
-  color: #666;
-  font-size: 14px;
+  margin-bottom: 10px;
 }
-.recipe-meta span {
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+}
+.category-badge i {
+  margin-right: 4px;
+  color: #ff5252;
+}
+.recipe-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+.stat-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+}
+.stat-item i {
+  color: #ff5252;
+}
+.recipe-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag-item {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: #fff5f5;
+  color: #ff5252;
+  border: 1px solid #ff5252;
+}
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+.empty-state i {
+  font-size: 3rem;
+  color: #ff5252;
+  margin-bottom: 20px;
+}
+.empty-state p {
+  margin-bottom: 20px;
 }
 .btn-primary {
-  background: #ff5252;
+  background-color: #ff5252;
   color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 20px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 .btn-primary:hover {
-  background: #ff3333;
-}
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: 20px;
-}
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ff5252;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  padding: 20px;
-  text-align: center;
-}
-.error-text {
-  color: #ff5252;
-  margin-bottom: 15px;
+  background-color: #ff3232;
 }
 </style>
